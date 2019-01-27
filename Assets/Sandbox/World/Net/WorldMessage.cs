@@ -1,5 +1,5 @@
 namespace Sandbox.Net {
-	public class WorldPartMessage : Message, IServerMessage {
+	public class WorldPartMessage : ReliableMessage, IServerMessage {
 		public ushort[,,] blocks;
 		public ushort offsetX;
 		public ushort offsetY;

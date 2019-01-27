@@ -39,7 +39,8 @@ namespace Sandbox {
 			for (var y = 0; y < Size; ++y)
 			for (var x = 0; x < Size; ++x) {
 				if (Client.world.blocks[x, y, z] == 0) { continue; }
-				var block = GameObject.CreatePrimitive(PrimitiveType.Cube);
+				var block = GameObject.Instantiate(WorldManager.BlockPrefab);
+				//var block = GameObject.CreatePrimitive(PrimitiveType.Cube);
 				block.transform.parent = Client.world.gameObject.transform;
 				block.transform.localPosition = new Vector3(x, y, z);
 			}

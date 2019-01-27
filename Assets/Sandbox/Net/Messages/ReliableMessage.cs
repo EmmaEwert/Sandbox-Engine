@@ -43,7 +43,7 @@ namespace Sandbox.Net {
 					return;
 				}
 				if (time - message.timestamp > Delays[message.resends]) {
-					Debug.Log($"No ACK from server, SEQ {sequence}, resending…");
+					//Debug.Log($"No ACK from server, SEQ {sequence}, resending…");
 					message.Resend();
 				}
 			}
@@ -57,7 +57,7 @@ namespace Sandbox.Net {
 					return;
 				}
 				if (time - message.timestamp > Delays[message.resends]) {
-					Debug.Log($"No ACK from client {client.connection}, SEQ {client.sequence}, resending…");
+					//Debug.Log($"No ACK from client {client.connection}, SEQ {client.sequence}, resending…");
 					message.Resend(client.connection);
 				}
 			}
@@ -148,7 +148,7 @@ namespace Sandbox.Net {
 					incomingSequences[connection] = expectedSequence = 0;
 				}
 				if (sequence > expectedSequence) {
-					Debug.Log($"Out of sequence: was {sequence}, expected {expectedSequence}");
+					//Debug.Log($"Out of sequence: was {sequence}, expected {expectedSequence}");
 					message.Read(reader);
 					waitingOnServer[(connection, sequence)] = this;
 					return;
@@ -174,7 +174,7 @@ namespace Sandbox.Net {
 				reader.Read(out int sequence);
 				new ActualAckMessage(sequence).Send();
 				if (sequence > incomingSequence) {
-					Debug.Log($"Out of sequence: was {sequence}, expected {incomingSequence}");
+					//Debug.Log($"Out of sequence: was {sequence}, expected {incomingSequence}");
 					message.Read(reader);
 					waitingOnClient[sequence] = this;
 					return;
@@ -194,12 +194,12 @@ namespace Sandbox.Net {
 		}
 
 		static void OnClientReceive(ActualAckMessage message) {
-			Debug.Log($"ACK from server, SEQ {message.sequence}");
+			//Debug.Log($"ACK from server, SEQ {message.sequence}");
 			clientMessages.Remove(message.sequence);
 		}
 
 		static void OnServerReceive(ActualAckMessage message) {
-			Debug.Log($"ACK from client {message.connection}, SEQ {message.sequence}");
+			//Debug.Log($"ACK from client {message.connection}, SEQ {message.sequence}");
 			serverMessages.Remove((message.connection, message.sequence));
 		}
 	}
