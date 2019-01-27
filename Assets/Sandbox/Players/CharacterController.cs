@@ -41,6 +41,9 @@
 				if (Input.GetButtonDown("Fire1")) {
 					new ButtonMessage(0, int3(round(hit.transform.localPosition))).Send();
 				}
+				if (Input.GetButtonDown("Fire2")) {
+					new PlaceBlockMessage(int3(round(hit.transform.localPosition + hit.normal))).Send();
+				}
 			}
 
 			if (any(float3(movement) != 0) || any(float2(aim) != 0)) {

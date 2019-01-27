@@ -39,8 +39,6 @@
 
 		///<summary>Start a local server and a client with the given player name.</summary>
 		public static void Start(string playerName) {
-			var ip = new WebClient().DownloadString("http://bot.whatismyipaddress.com");;
-			Debug.Log($"\"{ip}\"");
 			driver = new BasicNetworkDriver<IPv4UDPSocket>(new INetworkParameter[0]);
 			var endpoint = new IPEndPoint(localIP, 54889);
 			if (driver.Bind(endpoint) != 0) {
