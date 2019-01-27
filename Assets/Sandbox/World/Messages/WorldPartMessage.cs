@@ -1,4 +1,5 @@
-namespace Sandbox.Net {
+namespace Sandbox {
+	using Sandbox.Net;
 	public class WorldPartMessage : ReliableMessage, IServerMessage {
 		public ushort[,,] blocks;
 		public ushort offsetX;
@@ -10,7 +11,6 @@ namespace Sandbox.Net {
 			+ sizeof(byte) * 3;
 
 		public WorldPartMessage() { }
-
 		public WorldPartMessage(World world, ushort offsetX, ushort offsetY, ushort offsetZ) {
 			blocks = new ushort[8, 8, 8];
 			this.offsetX = offsetX;

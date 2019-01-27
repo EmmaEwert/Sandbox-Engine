@@ -1,4 +1,6 @@
-namespace Sandbox.Net {
+namespace Sandbox {
+	using Sandbox.Net;
+
 	public class ChatMessage : ReliableMessage, IServerMessage, IClientMessage {
 		int id;
 		public string text;

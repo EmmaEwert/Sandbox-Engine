@@ -26,8 +26,8 @@ namespace Sandbox.Net {
 			var endpoint = new IPEndPoint(IPAddress.Parse(ip), 54889);
 			connection[0] = driver.Connect(endpoint);
 			ChatManager.Add($"C: Connecting to {endpoint}…");
-			Message.RegisterClientHandler<AckMessage>(OnReceive);
-			Message.RegisterClientHandler<ConnectMessage>(OnReceive);
+			Message.RegisterClientHandler<ConnectServerMessage>(OnReceive);
+			Message.RegisterClientHandler<JoinMessage>(OnReceive);
 			Message.RegisterClientHandler<PingMessage>(OnReceive);
 			Message.RegisterClientHandler<WorldPartMessage>(World.OnReceive);
 		}
@@ -54,12 +54,6 @@ namespace Sandbox.Net {
 			}
 			messages.RemoveRange(0, sendJobHandles.Length);
 
-			// Process received messages on the main thread for ease of use.
-			for (var i = 0; i < receivedMessages.Count; ++i) {
-				receivedMessages[i].OnReceive();
-			}
-			receivedMessages.Clear();
-
 			// Schedule new network event reception
 			var receiveJob = new ReceiveJob {
 				driver = driver,
@@ -79,11 +73,11 @@ namespace Sandbox.Net {
 			}
 		}
 
-		static void OnReceive(AckMessage message) {
+		static void OnReceive(ConnectServerMessage message) {
 			id = message.id;
 		}
 
-		static void OnReceive(ConnectMessage message) {
+		static void OnReceive(JoinMessage message) {
 			players[message.id] = message.name;
 		}
 
@@ -95,8 +89,6 @@ namespace Sandbox.Net {
 			var data = new NativeArray<byte>(bytes, Allocator.TempJob);
 			messages.Add(data);
 		}
-
-		static List<Message> receivedMessages = new List<Message>();
 
 		static void Receive(Reader reader) {
 			reader.Read(out ushort typeIndex);
@@ -119,7 +111,7 @@ namespace Sandbox.Net {
 					switch (command) {
 						case NetworkEvent.Type.Connect:
 							ChatManager.Add("C: Connected to server");
-							new SynMessage(name).Send();
+							new ConnectClientMessage(name).Send();
 							break;
 						case NetworkEvent.Type.Disconnect:
 							ChatManager.Add("C: Disconnected from server");

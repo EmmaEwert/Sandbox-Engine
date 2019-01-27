@@ -48,7 +48,7 @@
 			}
 			connections = new NativeList<NetworkConnection>(16, Allocator.Persistent);
 			Message.RegisterServerHandler<ButtonMessage>(OnReceive);
-			Message.RegisterServerHandler<SynMessage>(OnReceive);
+			Message.RegisterServerHandler<ConnectClientMessage>(OnReceive);
 
 			Client.Start(localIP.ToString(), playerName);
 		}
@@ -154,13 +154,13 @@
 			}
 		}
 
-		static void OnReceive(SynMessage message) {
+		static void OnReceive(ConnectClientMessage message) {
 			players.Add(message.connection, message.name);
-			new AckMessage(message.connection).Send(message.connection);
-			new ConnectMessage(message.connection, message.name).Broadcast();
+			new ConnectServerMessage(message.connection).Send(message.connection);
+			new JoinMessage(message.connection, message.name).Broadcast();
 			foreach (var player in Server.players) {
 				if (player.Key != message.connection) {
-					new ConnectMessage(player.Key, player.Value).Send(message.connection);
+					new JoinMessage(player.Key, player.Value).Send(message.connection);
 				}
 			}
 			new WorldPartMessage(Server.world, 0, 0, 0).Send(message.connection);

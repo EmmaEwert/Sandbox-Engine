@@ -1,5 +1,5 @@
 namespace Sandbox.Net {
-	public class PingMessage : Message, IServerMessage, IClientMessage {
+	internal class PingMessage : Message, IServerMessage, IClientMessage {
 		protected override int length => 0;
 
 		public void Read(Reader reader) { }

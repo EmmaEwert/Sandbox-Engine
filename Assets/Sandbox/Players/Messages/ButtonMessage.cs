@@ -1,4 +1,5 @@
-namespace Sandbox.Net {
+namespace Sandbox {
+	using Sandbox.Net;
 	using Unity.Mathematics;
 
 	public class ButtonMessage : Message, IClientMessage {
@@ -8,7 +9,6 @@ namespace Sandbox.Net {
 		protected override int length => sizeof(int) * 4;
 
 		public ButtonMessage() { }
-
 		public ButtonMessage(int button, int3 blockPosition) {
 			this.button = button;
 			this.blockPosition = blockPosition;

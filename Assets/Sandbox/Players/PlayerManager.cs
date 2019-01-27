@@ -10,7 +10,7 @@ namespace Sandbox {
 		public GameObject localPrefab;
 		public GameObject remotePrefab;
 
-		void OnReceive(ConnectMessage message) {
+		void OnReceive(JoinMessage message) {
 			if (message.local) {
 				localPlayer = Instantiate(localPrefab);
 			} else {
@@ -31,7 +31,7 @@ namespace Sandbox {
 		}
 
 		void Awake() {
-			Message.RegisterClientHandler<ConnectMessage>(OnReceive);
+			Message.RegisterClientHandler<JoinMessage>(OnReceive);
 			Message.RegisterClientHandler<TransformMessage>(OnClientReceive);
 			Message.RegisterServerHandler<TransformMessage>(OnServerReceive);
 		}

@@ -27,14 +27,14 @@ namespace Sandbox {
 			Add($"{message.name}: {message.text}");
 		}
 
-		void OnReceive(ConnectMessage message) {
+		void OnReceive(JoinMessage message) {
 			Add($"{message.name} connected with ID {message.id}");
 		}
 
 		void Start() {
 			Message.RegisterServerHandler<ChatMessage>(OnServerReceive);
 			Message.RegisterClientHandler<ChatMessage>(OnClientReceive);
-			Message.RegisterClientHandler<ConnectMessage>(OnReceive);
+			Message.RegisterClientHandler<JoinMessage>(OnReceive);
 			chat = GetComponent<Text>();
 			Add("Hi~");
 		}

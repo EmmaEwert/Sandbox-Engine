@@ -1,33 +1,32 @@
 namespace Sandbox.Net {
 	using System.Collections.Generic;
 	using System.Linq;
-	using System.Threading.Tasks;
 	using UnityEngine;
 
 	public abstract class ReliableMessage : Message {
 		static int[] Delays = { 1, 1, 2, 3, 5, 8, 13, 21 };
+		static float time;
 
 		// Client
-		static int incomingSequence = 0;
-		static int outgoingSequence = 0;
+		static int incomingSequence;
+		static int outgoingSequence;
 		static Dictionary<int, ReliableMessage> clientMessages = new Dictionary<int, ReliableMessage>();
-		static Dictionary<(int connection, int sequence), ReliableMessage> serverMessages = new Dictionary<(int, int), ReliableMessage>();
+		static Dictionary<int, ReliableMessage> waitingOnClient = new Dictionary<int, ReliableMessage>();
 
 		// Server
 		static Dictionary<int, int> incomingSequences = new Dictionary<int, int>();
 		static Dictionary<int, int> outgoingSequences = new Dictionary<int, int>();
-		static Dictionary<int, ReliableMessage> waitingOnClient = new Dictionary<int, ReliableMessage>();
+		static Dictionary<(int connection, int sequence), ReliableMessage> serverMessages = new Dictionary<(int, int), ReliableMessage>();
 		static Dictionary<(int connection, int sequence), ReliableMessage> waitingOnServer = new Dictionary<(int connection, int sequence), ReliableMessage>();
 
-		static float time;
+		int resends;
 		int sequence;
 		float timestamp;
-		int resends = 0;
 
 		public static void Start() {
 			time = Time.realtimeSinceStartup;
-			Message.RegisterClientHandler<ActualAckMessage>(OnClientReceive);
-			Message.RegisterServerHandler<ActualAckMessage>(OnServerReceive);
+			Message.RegisterClientHandler<AckMessage>(OnClientReceive);
+			Message.RegisterServerHandler<AckMessage>(OnServerReceive);
 		}
 
 		///<summary>Resend stale unacknowledged messages.</summary>
@@ -43,7 +42,6 @@ namespace Sandbox.Net {
 					return;
 				}
 				if (time - message.timestamp > Delays[message.resends]) {
-					//Debug.Log($"No ACK from server, SEQ {sequence}, resending…");
 					message.Resend();
 				}
 			}
@@ -57,10 +55,17 @@ namespace Sandbox.Net {
 					return;
 				}
 				if (time - message.timestamp > Delays[message.resends]) {
-					//Debug.Log($"No ACK from client {client.connection}, SEQ {client.sequence}, resending…");
 					message.Resend(client.connection);
 				}
 			}
+		}
+
+		static void OnClientReceive(AckMessage message) {
+			clientMessages.Remove(message.sequence);
+		}
+
+		static void OnServerReceive(AckMessage message) {
+			serverMessages.Remove((message.connection, message.sequence));
 		}
 
 		///<summary>Send from client to server.</summary>
@@ -73,21 +78,6 @@ namespace Sandbox.Net {
 					writer.Write(outgoingSequence);
 					sequence = outgoingSequence;
 					++outgoingSequence;
-					message.Write(writer);
-					var bytes = writer.ToArray();
-					Client.Send(bytes);
-				}
-			}
-		}
-
-		///<summary>Resend from client to server.</summary>
-		void Resend() {
-			if (this is IClientMessage message) {
-				timestamp = time;
-				++resends;
-				using (var writer = new Writer()) {
-					writer.Write((ushort)Types.IndexOf(this.GetType()));
-					writer.Write(sequence);
 					message.Write(writer);
 					var bytes = writer.ToArray();
 					Client.Send(bytes);
@@ -115,21 +105,6 @@ namespace Sandbox.Net {
 			}
 		}
 
-		///<summary>Resend from server to client.</summary>
-		void Resend(int connection) {
-			if (this is IServerMessage message) {
-				timestamp = time;
-				++resends;
-				using (var writer = new Writer()) {
-					writer.Write((ushort)Types.IndexOf(this.GetType()));
-					writer.Write(sequence);
-					message.Write(writer);
-					var bytes = writer.ToArray();
-					Server.Send(bytes, connection);
-				}
-			}
-		}
-
 		///<summary>Broadcast from server to all clients.</summary>
 		public override void Broadcast() {
 			if (this is IServerMessage message) {
@@ -140,10 +115,10 @@ namespace Sandbox.Net {
 		}
 
 		///<summary>Receive on server from client.</summary>
-		public override void Receive(Reader reader, int connection) {
+		internal override void Receive(Reader reader, int connection) {
 			if (this is IClientMessage message) {
 				reader.Read(out int sequence);
-				new ActualAckMessage(sequence).Send(connection);
+				new AckMessage(sequence).Send(connection);
 				if (!incomingSequences.TryGetValue(connection, out var expectedSequence)) {
 					incomingSequences[connection] = expectedSequence = 0;
 				}
@@ -163,16 +138,15 @@ namespace Sandbox.Net {
 					waitingOnServer.Remove((connection, incomingSequences[connection]));
 					serverReceivedMessages.Add(waitingMessage);
 					++incomingSequences[connection];
-					//waitingMessage.Receive(reader, connection);
 				}
 			}
 		}
 
 		///<summary>Receive on client from server.</summary>
-		public override void Receive(Reader reader) {
+		internal override void Receive(Reader reader) {
 			if (this is IServerMessage message) {
 				reader.Read(out int sequence);
-				new ActualAckMessage(sequence).Send();
+				new AckMessage(sequence).Send();
 				if (sequence > incomingSequence) {
 					//Debug.Log($"Out of sequence: was {sequence}, expected {incomingSequence}");
 					message.Read(reader);
@@ -188,19 +162,57 @@ namespace Sandbox.Net {
 					waitingOnClient.Remove(incomingSequence);
 					clientReceivedMessages.Add(waitingMessage);
 					++incomingSequence;
-					//message.Receive(reader);
 				}
 			}
 		}
 
-		static void OnClientReceive(ActualAckMessage message) {
-			//Debug.Log($"ACK from server, SEQ {message.sequence}");
-			clientMessages.Remove(message.sequence);
+		///<summary>Resend from client to server.</summary>
+		void Resend() {
+			if (this is IClientMessage message) {
+				timestamp = time;
+				++resends;
+				using (var writer = new Writer()) {
+					writer.Write((ushort)Types.IndexOf(this.GetType()));
+					writer.Write(sequence);
+					message.Write(writer);
+					var bytes = writer.ToArray();
+					Client.Send(bytes);
+				}
+			}
 		}
 
-		static void OnServerReceive(ActualAckMessage message) {
-			//Debug.Log($"ACK from client {message.connection}, SEQ {message.sequence}");
-			serverMessages.Remove((message.connection, message.sequence));
+		///<summary>Resend from server to client.</summary>
+		void Resend(int connection) {
+			if (this is IServerMessage message) {
+				timestamp = time;
+				++resends;
+				using (var writer = new Writer()) {
+					writer.Write((ushort)Types.IndexOf(this.GetType()));
+					writer.Write(sequence);
+					message.Write(writer);
+					var bytes = writer.ToArray();
+					Server.Send(bytes, connection);
+				}
+			}
+		}
+
+		class AckMessage : Message, IServerMessage, IClientMessage {
+			public int sequence;
+
+			protected override int length => sizeof(int);
+
+			public AckMessage() { }
+			public AckMessage(int sequence) {
+				this.sequence = sequence;
+			}
+
+			public void Read(Reader reader) {
+				reader.Read(out sequence);
+			}
+
+			public void Write(Writer writer) {
+				writer.Write(sequence);
+			}
 		}
 	}
 }

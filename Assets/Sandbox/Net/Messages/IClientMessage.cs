@@ -1,5 +1,5 @@
 namespace Sandbox.Net {
-	internal interface IClientMessage {
+	public interface IClientMessage {
 		void Read(Reader reader);
 		void Write(Writer writer);
 	}

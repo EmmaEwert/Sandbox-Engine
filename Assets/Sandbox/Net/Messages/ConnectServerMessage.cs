@@ -1,12 +1,11 @@
 namespace Sandbox.Net {
-	internal class AckMessage : Message, IServerMessage {
-		internal int id;
+	internal class ConnectServerMessage : Message, IServerMessage {
+		public int id;
 
 		protected override int length => sizeof(int);
 
-		public AckMessage() { }
-
-		internal AckMessage(int connection) {
+		public ConnectServerMessage() { }
+		public ConnectServerMessage(int connection) {
 			this.id = connection;
 		}
 

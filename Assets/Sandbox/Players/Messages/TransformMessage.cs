@@ -1,4 +1,5 @@
-namespace Sandbox.Net {
+namespace Sandbox {
+	using Sandbox.Net;
 	using Unity.Mathematics;
 
 	public class TransformMessage : Message, IServerMessage, IClientMessage {
@@ -14,7 +15,6 @@ namespace Sandbox.Net {
 			+ sizeof(float) * 4; // Rotation
 
 		public TransformMessage() { }
-
 		public TransformMessage(float3 position, quaternion rotation) {
 			id = Client.id;
 			this.position = position;

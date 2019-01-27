@@ -5,19 +5,18 @@ namespace Sandbox.Net {
 	using UnityEngine;
 
 	public abstract class Message {
-		public int connection;
-
-		protected static int StringSize(string text) =>
-			sizeof(int) + Encoding.UTF8.GetByteCount(text);
-
+		protected static List<Message> clientReceivedMessages = new List<Message>();
+		protected static List<Message> serverReceivedMessages = new List<Message>();
 		static List<System.Type> types;
+
 		internal static List<System.Type> Types =>
 			types = types ?? Reflector.ImplementationsOf<Message>();
+		protected static int StringSize(string text) =>
+			sizeof(int) + Encoding.UTF8.GetByteCount(text);
 		static Dictionary<System.Type, Action<Message>> onServerReceive = new Dictionary<Type, Action<Message>>();
 		static Dictionary<System.Type, Action<Message>> onClientReceive = new Dictionary<Type, Action<Message>>();
 
-		protected static List<Message> clientReceivedMessages = new List<Message>();
-		protected static List<Message> serverReceivedMessages = new List<Message>();
+		internal int connection;
 
 		protected abstract int length { get; }
 
@@ -33,6 +32,22 @@ namespace Sandbox.Net {
 				clientReceivedMessages[i].OnReceive(server: false);
 			}
 			clientReceivedMessages.RemoveRange(0, clientMessageCount);
+		}
+
+		public static void RegisterServerHandler<T>(Action<T> onReceive) where T : Message {
+			if (Message.onServerReceive.TryGetValue(typeof(T), out var handler)) {
+				onClientReceive[typeof(T)] = handler + new Action<Message>(o => onReceive((T)o));
+			} else {
+				Message.onServerReceive[typeof(T)] = new Action<Message>(o => onReceive((T)o));
+			}
+		}
+
+		public static void RegisterClientHandler<T>(Action<T> onReceive) where T : Message {
+			if (Message.onClientReceive.TryGetValue(typeof(T), out var handler)) {
+				onClientReceive[typeof(T)] = handler + new Action<Message>(o => onReceive((T)o));
+			} else {
+				Message.onClientReceive[typeof(T)] = new Action<Message>(o => onReceive((T)o));
+			}
 		}
 
 		///<summary>Send from client to server.</summary>
@@ -72,45 +87,27 @@ namespace Sandbox.Net {
 		}
 
 		///<summary>Receive on server from client.</summary>
-		public virtual void Receive(Reader reader, int connection) {
+		internal virtual void Receive(Reader reader, int connection) {
 			this.connection = connection;
 			if (this is IClientMessage message) {
 				message.Read(reader);
 				serverReceivedMessages.Add(this);
-				//OnReceive(server: true);
 			} else {
 				Debug.LogWarning($"Server received illegal message {GetType()}, ignoring.");
 			}
 		}
 
 		///<summary>Receive on client from server.</summary>
-		public virtual void Receive(Reader reader) {
+		internal virtual void Receive(Reader reader) {
 			if (this is IServerMessage message) {
 				message.Read(reader);
 				clientReceivedMessages.Add(this);
-				//OnReceive(server: false);
 			} else {
 				Debug.LogWarning($"Client received illegal message {GetType()}, ignoring.");
 			}
 		}
 
-		public static void RegisterServerHandler<T>(Action<T> onReceive) where T : Message {
-			if (Message.onServerReceive.TryGetValue(typeof(T), out var handler)) {
-				onClientReceive[typeof(T)] = handler + new Action<Message>(o => onReceive((T)o));
-			} else {
-				Message.onServerReceive[typeof(T)] = new Action<Message>(o => onReceive((T)o));
-			}
-		}
-
-		public static void RegisterClientHandler<T>(Action<T> onReceive) where T : Message {
-			if (Message.onClientReceive.TryGetValue(typeof(T), out var handler)) {
-				onClientReceive[typeof(T)] = handler + new Action<Message>(o => onReceive((T)o));
-			} else {
-				Message.onClientReceive[typeof(T)] = new Action<Message>(o => onReceive((T)o));
-			}
-		}
-
-		public virtual void OnReceive(bool server = false) {
+		void OnReceive(bool server = false) {
 			var onReceive = server ? onServerReceive : onClientReceive;
 			if (onReceive.TryGetValue(GetType(), out var handler)) {
 				handler(this);
