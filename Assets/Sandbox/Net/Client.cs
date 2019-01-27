@@ -5,9 +5,9 @@ namespace Sandbox.Net {
 	using Unity.Collections;
 	using Unity.Jobs;
 	using Unity.Networking.Transport;
-	using UnityEngine;
 
 	public static class Client {
+		const float PacketLoss = 0f;
 		public static World world;
 		internal static Dictionary<int, string> players = new Dictionary<int, string>();
 		internal static int id;
@@ -17,8 +17,7 @@ namespace Sandbox.Net {
 		static List<NativeArray<byte>> messages = new List<NativeArray<byte>>();
 		static JobHandle receiveJobHandle;
 		static JobHandle[] sendJobHandles = new JobHandle[0];
-		static int incomingSequence;
-		static int outgoingSequence;
+		static Unity.Mathematics.Random random = new Unity.Mathematics.Random(1);
 
 		public static void Start(string ip, string name) {
 			driver = new BasicNetworkDriver<IPv4UDPSocket>(new INetworkParameter[0]);
@@ -43,6 +42,7 @@ namespace Sandbox.Net {
 			}
 			connection.Dispose();
 			driver.Dispose();
+			// TODO: Disconnect if connected
 		}
 
 		public static void Update() {
@@ -102,12 +102,8 @@ namespace Sandbox.Net {
 			reader.Read(out ushort typeIndex);
 			var type = Message.Types[typeIndex];
 			var message = (Message)Activator.CreateInstance(type);
-			if (message is IServerMessage serverMessage) {
-				serverMessage.Read(reader);
-				receivedMessages.Add(message);
-			} else {
-				Debug.LogWarning($"Client received illegal message {message.GetType()}, ignoring.");
-			}
+			if (message is ReliableMessage && random.NextFloat() < PacketLoss) { return; }
+			message.Receive(reader);
 		}
 
 		//[BurstCompile]

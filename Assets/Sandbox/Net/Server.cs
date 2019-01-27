@@ -10,18 +10,19 @@
 	using UnityEngine.Assertions;
 
 	public static class Server {
+		const float PacketLoss = 0f;
 		public static Dictionary<int, string> players = new Dictionary<int, string>();
 		public static World world;
-		static BasicNetworkDriver<IPv4UDPSocket> driver;
+		public static NetworkConnection[] Connections = new NetworkConnection[0];
 		static NativeList<NetworkConnection> connections;
+		static BasicNetworkDriver<IPv4UDPSocket> driver;
 		static List<NativeArray<byte>> broadcasts = new List<NativeArray<byte>>();
 		static List<(int connection, NativeArray<byte> data)> messages = new List<(int, NativeArray<byte>)>();
 		static JobHandle receiveJobHandle;
 		static JobHandle[] sendJobHandles = new JobHandle[0];
 		static JobHandle[] broadcastJobHandles = new JobHandle[0];
 		static float ping;
-		static List<int> incomingSequences;
-		static List<int> outgoingSequences;
+		static Unity.Mathematics.Random random = new Unity.Mathematics.Random(1);
 
 		static IPAddress localIP {
 			get {
@@ -55,6 +56,16 @@
 		///<summary>Clean up server handles.</summary>
 		public static void Stop() {
 			receiveJobHandle.Complete();
+			for (var i = 0; i < sendJobHandles.Length; ++i) {
+				sendJobHandles[i].Complete();
+				messages[i].data.Dispose();
+			}
+			messages.RemoveRange(0, sendJobHandles.Length);
+			for (var i = 0; i < broadcastJobHandles.Length; ++i) {
+				broadcastJobHandles[i].Complete();
+				broadcasts[i].Dispose();
+			}
+			broadcasts.RemoveRange(0, broadcastJobHandles.Length);
 			driver.Dispose();
 			connections.Dispose();
 			Client.Stop();
@@ -74,6 +85,7 @@
 				broadcasts[i].Dispose();
 			}
 			broadcasts.RemoveRange(0, broadcastJobHandles.Length);
+			Connections = connections.ToArray();
 
 			// Schedule new network connection and event reception
 			var concurrentDriver = driver.ToConcurrent();
@@ -165,13 +177,8 @@
 			reader.Read(out ushort typeIndex);
 			var type = Message.Types[typeIndex];
 			var message = (Message)Activator.CreateInstance(type);
-			message.connection = connection;
-			if (message is IClientMessage clientMessage) {
-				clientMessage.Read(reader);
-				message.OnReceive(server: true);
-			} else {
-				Debug.LogWarning($"Server received illegal message {message.GetType()}, ignoring.");
-			}
+			if (message is ReliableMessage && random.NextFloat() < PacketLoss) { return; }
+			message.Receive(reader, connection);
 		}
 
 		//[BurstCompile]

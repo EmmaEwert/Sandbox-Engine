@@ -1,5 +1,5 @@
 namespace Sandbox.Net {
-	public class ChatMessage : Message, IServerMessage, IClientMessage {
+	public class ChatMessage : ReliableMessage, IServerMessage, IClientMessage {
 		int id;
 		public string text;
 
@@ -7,7 +7,6 @@ namespace Sandbox.Net {
 		protected override int length => sizeof(int) + StringSize(text);
 
 		public ChatMessage() { }
-
 		public ChatMessage(string text) {
 			id = Client.id;
 			this.text = text;

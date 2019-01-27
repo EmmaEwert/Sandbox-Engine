@@ -2,6 +2,7 @@ namespace Sandbox.Net {
 	using System;
 	using System.Collections.Generic;
 	using System.Text;
+	using UnityEngine;
 
 	public abstract class Message {
 		public int connection;
@@ -15,9 +16,26 @@ namespace Sandbox.Net {
 		static Dictionary<System.Type, Action<Message>> onServerReceive = new Dictionary<Type, Action<Message>>();
 		static Dictionary<System.Type, Action<Message>> onClientReceive = new Dictionary<Type, Action<Message>>();
 
+		protected static List<Message> clientReceivedMessages = new List<Message>();
+		protected static List<Message> serverReceivedMessages = new List<Message>();
+
 		protected abstract int length { get; }
 
-		///<summary>Send from client to server</summary>
+		public static void Update() {
+			var serverMessageCount = serverReceivedMessages.Count;
+			for (var i = 0; i < serverMessageCount; ++i) {
+				serverReceivedMessages[i].OnReceive(server: true);
+			}
+			serverReceivedMessages.RemoveRange(0, serverMessageCount);
+
+			var clientMessageCount = clientReceivedMessages.Count;
+			for (var i = 0; i < clientMessageCount; ++i) {
+				clientReceivedMessages[i].OnReceive(server: false);
+			}
+			clientReceivedMessages.RemoveRange(0, clientMessageCount);
+		}
+
+		///<summary>Send from client to server.</summary>
 		public virtual void Send() {
 			if (this is IClientMessage message) {
 				using (var writer = new Writer()) {
@@ -29,7 +47,7 @@ namespace Sandbox.Net {
 			}
 		}
 
-		///<summary>Send from server to client</summary>
+		///<summary>Send from server to client.</summary>
 		public virtual void Send(int connection) {
 			if (this is IServerMessage message) {
 				using (var writer = new Writer()) {
@@ -41,7 +59,7 @@ namespace Sandbox.Net {
 			}
 		}
 
-		///<summary>Broadcast from server to all clients</summary>
+		///<summary>Broadcast from server to all clients.</summary>
 		public virtual void Broadcast() {
 			if (this is IServerMessage message) {
 				using (var writer = new Writer()) {
@@ -50,6 +68,29 @@ namespace Sandbox.Net {
 					var bytes = writer.ToArray();
 					Server.Broadcast(bytes);
 				}
+			}
+		}
+
+		///<summary>Receive on server from client.</summary>
+		public virtual void Receive(Reader reader, int connection) {
+			this.connection = connection;
+			if (this is IClientMessage message) {
+				message.Read(reader);
+				serverReceivedMessages.Add(this);
+				//OnReceive(server: true);
+			} else {
+				Debug.LogWarning($"Server received illegal message {GetType()}, ignoring.");
+			}
+		}
+
+		///<summary>Receive on client from server.</summary>
+		public virtual void Receive(Reader reader) {
+			if (this is IServerMessage message) {
+				message.Read(reader);
+				clientReceivedMessages.Add(this);
+				//OnReceive(server: false);
+			} else {
+				Debug.LogWarning($"Client received illegal message {GetType()}, ignoring.");
 			}
 		}
 

@@ -8,6 +8,7 @@ namespace Sandbox {
 		public bool server { get; set; } = false;
 
 		void Start() {
+			ReliableMessage.Start();
 			if (server) {
 				Server.world = new World();
 				Server.world.Generate();
@@ -18,6 +19,8 @@ namespace Sandbox {
 		}
 
 		void Update() {
+			Message.Update();
+			ReliableMessage.Update();
 			if (server) {
 				Server.Update();
 			} else {
