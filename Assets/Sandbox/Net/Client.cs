@@ -107,7 +107,7 @@ namespace Sandbox.Net {
 				if (!connection[0].IsCreated) { return; }
 
 				NetworkEvent.Type command;
-				while ((command = connection[0].PopEvent(driver, out var reader)) != NetworkEvent.Type.Empty) {
+				while ((command = connection[0].PopEvent(driver, out var streamReader)) != NetworkEvent.Type.Empty) {
 					switch (command) {
 						case NetworkEvent.Type.Connect:
 							ChatManager.Add("C: Connected to server");
@@ -118,7 +118,9 @@ namespace Sandbox.Net {
 							connection[0] = default(NetworkConnection);
 							break;
 						case NetworkEvent.Type.Data:
-							Receive(new Reader(reader));
+							using (var reader = new Reader(streamReader)) {
+								Receive(reader);
+							}
 							break;
 					}
 				}

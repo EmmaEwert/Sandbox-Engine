@@ -1,6 +1,7 @@
 namespace Sandbox.Net {
 	using System;
 	using System.IO;
+	using System.IO.Compression;
 	using System.Text;
 	using Unity.Mathematics;
 
@@ -19,7 +20,19 @@ namespace Sandbox.Net {
 		}
 
 		internal byte[] ToArray() {
-			return stream.ToArray();
+			var data = stream.ToArray();
+			//byte[] data;
+			using (var outStream = new MemoryStream()) {
+				using (var deflateStream = new DeflateStream(outStream, CompressionLevel.Optimal)) {
+					stream.CopyTo(deflateStream);
+					deflateStream.Write(data, 0, data.Length);
+				}
+				data = outStream.ToArray();
+			}
+			var bytes = new byte[sizeof(int) + data.Length];
+			Buffer.BlockCopy(BitConverter.GetBytes(data.Length), 0, bytes, 0, sizeof(int));
+			Buffer.BlockCopy(data, 0, bytes, sizeof(int), data.Length);
+			return bytes;
 		}
 
 		internal void Write(int value) => writer.Write(value);

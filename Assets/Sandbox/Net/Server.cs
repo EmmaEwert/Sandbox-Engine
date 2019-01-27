@@ -8,6 +8,7 @@
 	using Unity.Networking.Transport;
 	using UnityEngine;
 	using UnityEngine.Assertions;
+	using static Unity.Mathematics.math;
 
 	public static class Server {
 		const float PacketLoss = 0f;
@@ -38,6 +39,8 @@
 
 		///<summary>Start a local server and a client with the given player name.</summary>
 		public static void Start(string playerName) {
+			var ip = new WebClient().DownloadString("http://bot.whatismyipaddress.com");;
+			Debug.Log($"\"{ip}\"");
 			driver = new BasicNetworkDriver<IPv4UDPSocket>(new INetworkParameter[0]);
 			var endpoint = new IPEndPoint(localIP, 54889);
 			if (driver.Bind(endpoint) != 0) {
@@ -49,6 +52,7 @@
 			connections = new NativeList<NetworkConnection>(16, Allocator.Persistent);
 			Message.RegisterServerHandler<ButtonMessage>(OnReceive);
 			Message.RegisterServerHandler<ConnectClientMessage>(OnReceive);
+			Message.RegisterServerHandler<PlaceBlockMessage>(OnReceive);
 
 			Client.Start(localIP.ToString(), playerName);
 		}
@@ -145,12 +149,8 @@
 
 		static void OnReceive(ButtonMessage message) {
 			if (message.button == 0) {
-				Server.world.blocks[message.blockPosition.x, message.blockPosition.y, message.blockPosition.z] = 0;
-				new WorldPartMessage(Server.world,
-					(ushort)(((message.blockPosition.x % 16) / 8) * 8),
-					(ushort)(((message.blockPosition.y % 16) / 8) * 8),
-					(ushort)(((message.blockPosition.z % 16) / 8) * 8)
-				).Broadcast();
+				world.blocks[message.blockPosition.x, message.blockPosition.y, message.blockPosition.z] = 0;
+				new WorldPartMessage(Server.world).Broadcast();
 			}
 		}
 
@@ -163,14 +163,13 @@
 					new JoinMessage(player.Key, player.Value).Send(message.connection);
 				}
 			}
-			new WorldPartMessage(Server.world, 0, 0, 0).Send(message.connection);
-			new WorldPartMessage(Server.world, 0, 0, 8).Send(message.connection);
-			new WorldPartMessage(Server.world, 0, 8, 0).Send(message.connection);
-			new WorldPartMessage(Server.world, 0, 8, 8).Send(message.connection);
-			new WorldPartMessage(Server.world, 8, 0, 0).Send(message.connection);
-			new WorldPartMessage(Server.world, 8, 0, 8).Send(message.connection);
-			new WorldPartMessage(Server.world, 8, 8, 0).Send(message.connection);
-			new WorldPartMessage(Server.world, 8, 8, 8).Send(message.connection);
+			new WorldPartMessage(Server.world).Send(message.connection);
+		}
+
+		static void OnReceive(PlaceBlockMessage message) {
+			if (any(message.blockPosition < 0) || any(message.blockPosition >= World.Size)) { return; }
+			world.blocks[message.blockPosition.x, message.blockPosition.y, message.blockPosition.z] = 1;
+			new WorldPartMessage(world).Broadcast();
 		}
 
 		static void Receive(Reader reader, int connection) {
@@ -213,14 +212,16 @@
 				Assert.IsTrue(connections[index].IsCreated);
 
 				NetworkEvent.Type command;
-				while ((command = driver.PopEventForConnection(connections[index], out var reader)) != NetworkEvent.Type.Empty) {
+				while ((command = driver.PopEventForConnection(connections[index], out var streamReader)) != NetworkEvent.Type.Empty) {
 					switch (command) {
 						case NetworkEvent.Type.Disconnect:
 							ChatManager.Add($"S: Client disconnected");
 							connections[index] = default(NetworkConnection);
 							break;
 						case NetworkEvent.Type.Data:
-							Receive(new Reader(reader), connections[index].InternalId);
+							using (var reader = new Reader(streamReader)) {
+								Receive(reader, connections[index].InternalId);
+							}
 							break;
 					}
 				}
