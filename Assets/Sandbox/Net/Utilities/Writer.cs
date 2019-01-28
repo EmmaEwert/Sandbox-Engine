@@ -34,6 +34,12 @@ namespace Sandbox.Net {
 			return bytes;
 		}
 
+		internal void Write(ushort[] value) {
+			var bytes = new byte[value.Length * sizeof(ushort)];
+			Buffer.BlockCopy(value, 0, bytes, 0, bytes.Length);
+			writer.Write(bytes);
+		}
+
 		internal void Write(int value) => writer.Write(value);
 		internal void Write(ushort value) => writer.Write(value);
 		internal void Write(float value) => writer.Write(value);

@@ -1,34 +1,35 @@
 namespace Sandbox {
 	using Sandbox.Net;
 	using System;
+	using Unity.Mathematics;
 
 	public class ChunkMessage : ReliableMessage, IServerMessage {
-		public ushort[,,] blocks;
+		public ushort volumeID;
+		public int3 pos;
+		public ushort[] blocks = new ushort[Chunk.Size * Chunk.Size * Chunk.Size];
 
 		protected override int length =>
-			sizeof(ushort) * Chunk.Size * Chunk.Size * Chunk.Size;
+			sizeof(ushort)
+			+ sizeof(int) * 3
+			+ sizeof(ushort) * blocks.Length;
 
 		public ChunkMessage() { }
-		public ChunkMessage(Chunk chunk) {
-			blocks = new ushort[Chunk.Size, Chunk.Size, Chunk.Size];
-			Buffer.BlockCopy(chunk.blocks, 0, blocks, 0, Chunk.Size * Chunk.Size * Chunk.Size);
+		public ChunkMessage(ushort volumeID, Chunk chunk) {
+			this.volumeID = volumeID;
+			this.pos = chunk.pos;
+			Buffer.BlockCopy(chunk.blocks, 0, blocks, 0, blocks.Length * sizeof(ushort));
 		}
 
 		public void Read(Reader reader) {
-			blocks = new ushort[Chunk.Size, Chunk.Size, Chunk.Size];
-			for (var z = 0; z < Chunk.Size; ++z)
-			for (var y = 0; y < Chunk.Size; ++y)
-			for (var x = 0; x < Chunk.Size; ++x) {
-				reader.Read(out blocks[x, y, z]);
-			}
+			reader.Read(out volumeID);
+			reader.Read(out pos);
+			reader.Read(ref blocks);
 		}
 
 		public void Write(Writer writer) {
-			for (var z = 0; z < Chunk.Size; ++z)
-			for (var y = 0; y < Chunk.Size; ++y)
-			for (var x = 0; x < Chunk.Size; ++x) {
-				writer.Write(blocks[x, y, z]);
-			}
+			writer.Write(volumeID);
+			writer.Write(pos);
+			writer.Write(blocks);
 		}
 	}
 }

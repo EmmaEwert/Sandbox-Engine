@@ -2,10 +2,11 @@ namespace Sandbox {
 	using Sandbox.Net;
 
 	public static class GameClient {
-		public static World world;
+		public static World world = new World();
 
 		public static void Start(string ip, string playerName) {
-			Message.RegisterClientHandler<WorldPartMessage>(World.OnReceive);
+			Message.RegisterClientHandler<VolumeMessage>(World.OnReceive);
+			Message.RegisterClientHandler<ChunkMessage>(World.OnReceive);
 			Client.Start(ip, playerName);
 		}
 
@@ -16,5 +17,6 @@ namespace Sandbox {
 		public static void Stop() {
 			Client.Stop();
 		}
+
 	}
 }
