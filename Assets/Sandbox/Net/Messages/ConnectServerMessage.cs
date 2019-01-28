@@ -1,5 +1,5 @@
 namespace Sandbox.Net {
-	internal class ConnectServerMessage : Message, IServerMessage {
+	internal class ConnectServerMessage : ReliableMessage, IServerMessage {
 		public int id;
 
 		protected override int length => sizeof(int);

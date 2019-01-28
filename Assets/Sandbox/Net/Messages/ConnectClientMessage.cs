@@ -1,5 +1,5 @@
 namespace Sandbox.Net {
-	internal class ConnectClientMessage : Message, IClientMessage {
+	public class ConnectClientMessage : ReliableMessage, IClientMessage {
 		public string name;
 
 		protected override int length => StringSize(name);

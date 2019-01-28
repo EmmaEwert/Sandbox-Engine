@@ -1,5 +1,6 @@
 namespace Sandbox {
 	using Sandbox.Net;
+
 	public class WorldPartMessage : ReliableMessage, IServerMessage {
 		public ushort[,,] blocks;
 

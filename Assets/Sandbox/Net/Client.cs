@@ -8,7 +8,6 @@ namespace Sandbox.Net {
 
 	public static class Client {
 		const float PacketLoss = 0f;
-		public static World world;
 		internal static Dictionary<int, string> players = new Dictionary<int, string>();
 		internal static int id;
 		static string name;
@@ -29,7 +28,6 @@ namespace Sandbox.Net {
 			Message.RegisterClientHandler<ConnectServerMessage>(OnReceive);
 			Message.RegisterClientHandler<JoinMessage>(OnReceive);
 			Message.RegisterClientHandler<PingMessage>(OnReceive);
-			Message.RegisterClientHandler<WorldPartMessage>(World.OnReceive);
 		}
 
 		public static void Stop() {

@@ -24,7 +24,6 @@ namespace Sandbox.Net {
 			//byte[] data;
 			using (var outStream = new MemoryStream()) {
 				using (var deflateStream = new DeflateStream(outStream, CompressionLevel.Optimal)) {
-					stream.CopyTo(deflateStream);
 					deflateStream.Write(data, 0, data.Length);
 				}
 				data = outStream.ToArray();

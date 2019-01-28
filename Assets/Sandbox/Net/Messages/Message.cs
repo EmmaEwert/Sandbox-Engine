@@ -35,18 +35,18 @@ namespace Sandbox.Net {
 		}
 
 		public static void RegisterServerHandler<T>(Action<T> onReceive) where T : Message {
-			if (Message.onServerReceive.TryGetValue(typeof(T), out var handler)) {
-				onClientReceive[typeof(T)] = handler + new Action<Message>(o => onReceive((T)o));
+			if (onServerReceive.TryGetValue(typeof(T), out var handler)) {
+				onServerReceive[typeof(T)] = handler + new Action<Message>(o => onReceive((T)o));
 			} else {
-				Message.onServerReceive[typeof(T)] = new Action<Message>(o => onReceive((T)o));
+				onServerReceive[typeof(T)] = new Action<Message>(o => onReceive((T)o));
 			}
 		}
 
 		public static void RegisterClientHandler<T>(Action<T> onReceive) where T : Message {
-			if (Message.onClientReceive.TryGetValue(typeof(T), out var handler)) {
+			if (onClientReceive.TryGetValue(typeof(T), out var handler)) {
 				onClientReceive[typeof(T)] = handler + new Action<Message>(o => onReceive((T)o));
 			} else {
-				Message.onClientReceive[typeof(T)] = new Action<Message>(o => onReceive((T)o));
+				onClientReceive[typeof(T)] = new Action<Message>(o => onReceive((T)o));
 			}
 		}
 
@@ -111,6 +111,8 @@ namespace Sandbox.Net {
 			var onReceive = server ? onServerReceive : onClientReceive;
 			if (onReceive.TryGetValue(GetType(), out var handler)) {
 				handler(this);
+			} else {
+				Debug.Log($"No handlers for {GetType()}, server: {server}, ignoring…");
 			}
 		}
 	}

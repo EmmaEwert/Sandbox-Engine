@@ -3,18 +3,19 @@ namespace Sandbox {
 	using UnityEngine;
 
 	public class Game : MonoBehaviour {
-		public string playerName { get; set; } = "Emma";
+		public string playerName {
+			get => PlayerPrefs.GetString("name", "Emma");
+			set => PlayerPrefs.SetString("name", value);
+		}
 		public string ip { get; set; } = "82.180.25.150";
 		public bool server { get; set; } = false;
 
 		void Start() {
 			ReliableMessage.Start();
 			if (server) {
-				Server.world = new World();
-				Server.world.Generate();
-				Server.Start(playerName);
+				GameServer.Start(playerName);
 			} else {
-				Client.Start(ip, playerName);
+				GameClient.Start(ip, playerName);
 			}
 		}
 
@@ -22,17 +23,17 @@ namespace Sandbox {
 			Message.Update();
 			ReliableMessage.Update();
 			if (server) {
-				Server.Update();
+				GameServer.Update();
 			} else {
-				Client.Update();
+				GameClient.Update();
 			}
 		}
 
 		void OnDestroy() {
 			if (server) {
-				Server.Stop();
+				GameServer.Stop();
 			} else {
-				Client.Stop();
+				GameClient.Stop();
 			}
 		}
 	}

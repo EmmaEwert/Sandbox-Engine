@@ -8,12 +8,10 @@
 	using Unity.Networking.Transport;
 	using UnityEngine;
 	using UnityEngine.Assertions;
-	using static Unity.Mathematics.math;
 
 	public static class Server {
 		const float PacketLoss = 0f;
 		public static Dictionary<int, string> players = new Dictionary<int, string>();
-		public static World world;
 		public static NetworkConnection[] Connections = new NetworkConnection[0];
 		static NativeList<NetworkConnection> connections;
 		static BasicNetworkDriver<IPv4UDPSocket> driver;
@@ -25,7 +23,7 @@
 		static float ping;
 		static Unity.Mathematics.Random random = new Unity.Mathematics.Random(1);
 
-		static IPAddress localIP {
+		public static IPAddress localIP {
 			get {
 				var host = Dns.GetHostEntry(Dns.GetHostName());
 				foreach (var ip in host.AddressList) {
@@ -48,11 +46,9 @@
 				ChatManager.Add($"S: Listening on {endpoint.Address}:{endpoint.Port}…");
 			}
 			connections = new NativeList<NetworkConnection>(16, Allocator.Persistent);
-			Message.RegisterServerHandler<ButtonMessage>(OnReceive);
 			Message.RegisterServerHandler<ConnectClientMessage>(OnReceive);
-			Message.RegisterServerHandler<PlaceBlockMessage>(OnReceive);
+			Message.RegisterServerHandler<PingMessage>(OnReceive);
 
-			Client.Start(localIP.ToString(), playerName);
 		}
 
 		///<summary>Clean up server handles.</summary>
@@ -70,7 +66,6 @@
 			broadcasts.RemoveRange(0, broadcastJobHandles.Length);
 			driver.Dispose();
 			connections.Dispose();
-			Client.Stop();
 		}
 
 		///<summary>Update the server state through network IO.</summary>
@@ -130,8 +125,6 @@
 				ping = 0f;
 				new PingMessage().Broadcast();
 			}
-
-			Client.Update();
 		}
 
 		internal static void Broadcast(byte[] bytes) {
@@ -145,13 +138,6 @@
 			//list.Add(data);
 		}
 
-		static void OnReceive(ButtonMessage message) {
-			if (message.button == 0) {
-				world.blocks[message.blockPosition.x, message.blockPosition.y, message.blockPosition.z] = 0;
-				new WorldPartMessage(Server.world).Broadcast();
-			}
-		}
-
 		static void OnReceive(ConnectClientMessage message) {
 			players.Add(message.connection, message.name);
 			new ConnectServerMessage(message.connection).Send(message.connection);
@@ -161,15 +147,10 @@
 					new JoinMessage(player.Key, player.Value).Send(message.connection);
 				}
 			}
-			new WorldPartMessage(Server.world).Send(message.connection);
 		}
 
-		static void OnReceive(PlaceBlockMessage message) {
-			if (any(message.blockPosition < 0) || any(message.blockPosition >= World.Size)) { return; }
-			world.blocks[message.blockPosition.x, message.blockPosition.y, message.blockPosition.z] = 1;
-			new WorldPartMessage(world).Broadcast();
-		}
-
+		static void OnReceive(PingMessage message) { }
+		
 		static void Receive(Reader reader, int connection) {
 			reader.Read(out ushort typeIndex);
 			var type = Message.Types[typeIndex];
