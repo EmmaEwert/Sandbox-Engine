@@ -39,8 +39,6 @@ namespace Sandbox {
 				var chunk = volume.ChunkAt(message.blockPosition);
 				volume[message.blockPosition] = 0;
 				new ChunkMessage(volumeID: 0, chunk).Broadcast();
-				//world.blocks[message.blockPosition.x, message.blockPosition.y, message.blockPosition.z] = 0;
-				// new WorldPartMessage(world).Broadcast();
 			}
 		}
 
@@ -61,8 +59,6 @@ namespace Sandbox {
 			var chunk = volume.ChunkAt(message.blockPosition);
 			volume[message.blockPosition] = 1;
 			new ChunkMessage(volumeID: 0, chunk).Broadcast();
-			//world.blocks[message.blockPosition.x, message.blockPosition.y, message.blockPosition.z] = 1;
-			// new WorldPartMessage(world).Broadcast();
 		}
 	}
 }

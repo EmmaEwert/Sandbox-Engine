@@ -49,7 +49,7 @@ namespace Sandbox {
 
 		public JobHandle Generate() {
 			return new GenerateJob {
-				y = pos.y,
+				pos = pos,
 				ids = this.ids
 			}.Schedule(ids.Length, Size);
 		}
@@ -108,7 +108,6 @@ namespace Sandbox {
 			mesh.SetTriangles(triangles, 0);
 			gameObject.GetComponent<MeshFilter>().sharedMesh = mesh;
 			mesh.UploadMeshData(markNoLongerReadable: true);
-			return;
 		}
 
 		static float3 RotateAroundPivot(float3 point, float3 pivot, float3 angles) {
@@ -117,13 +116,16 @@ namespace Sandbox {
 
 		[BurstCompile]
 		struct GenerateJob : IJobParallelFor {
-			[ReadOnly] public int y;
+			[ReadOnly] public int3 pos;
 			[WriteOnly] public NativeArray<ushort> ids;
 
 			public void Execute(int index) {
-				var y = this.y + (index / Size) % Size;
+				var x = pos.x + index % Size;
+				var y = pos.y + (index / Size) % Size;
+				var z = pos.z + (index / Size / Size) % Size;
 				if (y < Chunk.Size * Volume.ChunkDistance / 2) {
-					ids[index] = 1; // BlockManager.Default("sand").id;
+					var noise = Mathf.PerlinNoise(x / 30f, z / 30f);
+					ids[index] = (ushort)(noise > 0.5f ? 3 : 2); // BlockManager.Default("sand").id;
 				}
 			}
 		}

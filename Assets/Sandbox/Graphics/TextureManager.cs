@@ -17,8 +17,8 @@ namespace Sandbox {
 		public static void Start() {
 			var size = ceilpow2((int)ceil(sqrt(textures.Count) * TextureSize));
 			texels = size / TextureSize;
-			var atlas = new Texture2D(size, size, TextureFormat.ARGB32, mipChain: true) {
-				anisoLevel = 8,
+			var atlas = new Texture2D(size, size, TextureFormat.ARGB32, mipChain: false) {
+				anisoLevel = 0,
 				filterMode = FilterMode.Point,
 			};
 			var x = 0;
@@ -32,7 +32,7 @@ namespace Sandbox {
 					y += TextureSize;
 				}
 			}
-			atlas.Apply();
+			atlas.Apply(updateMipmaps: false, makeNoLongerReadable: true);
 			WorldManager.BlockMaterial.mainTexture = atlas;
 		}
 
