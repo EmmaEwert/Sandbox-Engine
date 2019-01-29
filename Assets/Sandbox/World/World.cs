@@ -27,26 +27,12 @@ namespace Sandbox {
 			chunk.ids = message.blocks;
 			chunk.UpdateGeometry(volume);
 			Benchmark.Benchmark.StopWatch("Update geometry");
-			var neighbors = new [] {
-				volume.ChunkAt(pos + int3(0, 0, -Chunk.Size)),
-				volume.ChunkAt(pos + int3(0, 0,  Chunk.Size)),
-				volume.ChunkAt(pos + int3(0, -Chunk.Size, 0)),
-				volume.ChunkAt(pos + int3(0,  Chunk.Size, 0)),
-				volume.ChunkAt(pos + int3(-Chunk.Size, 0, 0)),
-				volume.ChunkAt(pos + int3( Chunk.Size, 0, 0))
-			};
-			foreach (var neighbor in neighbors) {
-				if (!dirtyChunks.Contains(neighbor)) {
-					dirtyChunks.Enqueue(neighbor);
-				}
-			}
-			return;
 		}
 
 		public void Update() {
-			if (dirtyChunks.Count > 0) {
-				dirtyChunks.Dequeue().UpdateGeometry(volumes[0]);
-			}
+			//if (dirtyChunks.Count > 0) {
+				//dirtyChunks.Dequeue().UpdateGeometry(volumes[0]);
+			//}
 		}
 
 		internal void Generate() {

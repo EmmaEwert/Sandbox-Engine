@@ -50,9 +50,13 @@ namespace Sandbox {
 					var face = faces[i];
 					var faceNormal = faceNormals[log2_floor(face.cullface)];
 					if ((face.cullface & faceNormal.mask) != 0) {
-						var neighbor = volume[int3(x, y, z) + this.pos + faceNormal.normal];
-						if (neighbor != 0 && BlockState.blockStates[neighbor].block.opaqueCube) {
-							continue;
+						var neighborPos = int3(x, y, z) + faceNormal.normal;
+						if (all(neighborPos >= 0) && all(neighborPos < Size)) {
+							var neighbor = this[neighborPos];
+							//var neighbor = volume[int3(x, y, z) + this.pos + faceNormal.normal];
+							if (neighbor != 0 && BlockState.blockStates[neighbor].block.opaqueCube) {
+								continue;
+							}
 						}
 					}
 					for (var j = 0; j < 6; ++j) {

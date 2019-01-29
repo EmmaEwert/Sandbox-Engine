@@ -1,4 +1,5 @@
 namespace Sandbox {
+	using Benchmark;
 	using Sandbox.Net;
 	using static Unity.Mathematics.math;
 
@@ -9,9 +10,17 @@ namespace Sandbox {
 			Message.RegisterServerHandler<ButtonMessage>(OnReceive);
 			Message.RegisterServerHandler<ConnectClientMessage>(OnReceive);
 			Message.RegisterServerHandler<PlaceBlockMessage>(OnReceive);
+			Benchmark.StartWatch("World generation");
 			world.Generate();
+			Benchmark.StopWatch("World generation");
+
+			Benchmark.StartWatch("Server start");
 			Server.Start(playerName);
+			Benchmark.StopWatch("Server start");
+
+			Benchmark.StartWatch("Client start");
 			GameClient.Start(Server.localIP.ToString(), playerName);
+			Benchmark.StopWatches("Start Game");
 		}
 
 		public static void Update() {
@@ -36,12 +45,14 @@ namespace Sandbox {
 		}
 
 		static void OnReceive(ConnectClientMessage message) {
+			Benchmark.StartWatch("New player chunk messages");
 			foreach (var volume in world.volumes) {
 				new VolumeMessage(volume.Key).Send(message.connection);
 				foreach (var chunk in volume.Value.chunks) {
 					new ChunkMessage(volume.Key, chunk).Send(message.connection);
 				}
 			}
+			Benchmark.StopWatches("ConnectClientMessage");
 		}
 
 		static void OnReceive(PlaceBlockMessage message) {

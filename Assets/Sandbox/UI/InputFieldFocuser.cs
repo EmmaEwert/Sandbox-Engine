@@ -4,6 +4,7 @@
 
 	[RequireComponent(typeof(InputField))]
 	public class InputFieldFocuser : MonoBehaviour {
+		public GameObject background;
 		private InputField inputField => GetComponent<InputField>();
 		private Image image => GetComponent<Image>();
 
@@ -13,6 +14,7 @@
 				image.color = inputField.colors.highlightedColor;
 				inputField.ActivateInputField();
 				enabled = false;
+				background.SetActive(true);
 				if (CharacterController.instance) {
 					CharacterController.instance.enabled = false;
 				}
