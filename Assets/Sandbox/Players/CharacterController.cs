@@ -35,7 +35,7 @@
 			camera.Rotate(-aim.y, 0f, 0f);
 			
 			// Gravity
-			var gravity = float3(UnityEngine.Physics.gravity) * Time.deltaTime;
+			var gravity = float3(0, -20f, 0) * Time.deltaTime;
 			var newBox = new Box {
 				min = float3(transform.position) - float3(0.25f, 0.00f, 0.25f) + velocity.y * Time.deltaTime,
 				max = float3(transform.position) + float3(0.25f, 0.75f, 0.25f) + velocity.y * Time.deltaTime
@@ -78,16 +78,6 @@
 			} else {
 				lineBox.position = float3(0, 0, -1000);
 			}
-
-			//if (Physics.Raycast(camera.position, camera.forward, out var hit, 8f)) {
-				//lineBox.position = hit.transform.position;
-				//if (Input.GetButtonDown("Fire1")) {
-					//new ButtonMessage(0, int3(round(hit.transform.parent.localPosition + hit.transform.localPosition))).Send();
-				//}
-				//if (Input.GetButtonDown("Fire2")) {
-					//new PlaceBlockMessage(int3(round(hit.transform.parent.localPosition + hit.transform.localPosition + hit.normal))).Send();
-				//}
-			//}
 
 			if (any(velocity != 0) || any(float3(movement) != 0) || any(float2(aim) != 0)) {
 				new TransformMessage(transform.position, pivot.rotation).Send();
