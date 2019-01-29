@@ -1,5 +1,8 @@
 namespace Sandbox {
 	using System.Collections.Generic;
+	using Unity.Burst;
+	using Unity.Collections;
+	using Unity.Jobs;
 	using Unity.Mathematics;
 	using UnityEngine;
 	using static Unity.Mathematics.math;
@@ -17,17 +20,29 @@ namespace Sandbox {
 			(int3( 1,  0,  0), 1 << (byte)Block.Face.East),
 		};
 
-		public ushort[] ids = new ushort[Size * Size * Size];
+		public NativeArray<ushort> ids;// = new ushort[Size * Size * Size];
 		public int3 pos;
 		public GameObject gameObject;
 
 		public Chunk(int3 pos) {
+			this.ids = new NativeArray<ushort>(Size * Size * Size, Allocator.Persistent);
 			this.pos = pos;
+		}
+
+		~Chunk() {
+			ids.Dispose();
 		}
 
 		public ushort this[int3 pos] {
 			get => ids[dot(pos, PosToBlockIndex)];
 			set => ids[dot(pos, PosToBlockIndex)] = value;
+		}
+
+		public JobHandle Generate() {
+			return new GenerateJob {
+				y = pos.y,
+				ids = this.ids
+			}.Schedule(ids.Length, Size);
 		}
 
 		///<summary>Regenerates mesh for the chunk.</summary>
@@ -82,6 +97,19 @@ namespace Sandbox {
 
 		static float3 RotateAroundPivot(float3 point, float3 pivot, float3 angles) {
 			return float3(Quaternion.Euler(angles) * (point - pivot)) + pivot;
+		}
+
+		[BurstCompile]
+		struct GenerateJob : IJobParallelFor {
+			[ReadOnly] public int y;
+			[WriteOnly] public NativeArray<ushort> ids;
+
+			public void Execute(int index) {
+				var y = this.y + (index / Size) % Size;
+				if (y < Chunk.Size * Volume.ChunkDistance / 2) {
+					ids[index] = 1; // BlockManager.Default("sand").id;
+				}
+			}
 		}
 	}
 }

@@ -24,7 +24,7 @@ namespace Sandbox {
 			var volume = GameClient.world.volumes[message.volumeID];
 			var pos = message.pos;
 			var chunk = volume.ChunkAt(pos);
-			chunk.ids = message.blocks;
+			chunk.ids.CopyFrom(message.blocks);
 			chunk.UpdateGeometry(volume);
 			Benchmark.Benchmark.StopWatch("Update geometry");
 		}
@@ -37,13 +37,10 @@ namespace Sandbox {
 
 		internal void Generate() {
 			volumes[0] = new Volume();
-			for (var z = 0; z < Volume.ChunkDistance * Chunk.Size; ++z)
-			for (var y = 0; y < Volume.ChunkDistance * Chunk.Size; ++y)
-			for (var x = 0; x < Volume.ChunkDistance * Chunk.Size; ++x) {
-				if (y < Chunk.Size * Volume.ChunkDistance / 2) {
-					volumes[0][int3(x, y, z)] = BlockManager.Default("sand").id;
-				}
-			}
+			volumes[0].Generate();
+			return;
 		}
+
+
 	}
 }

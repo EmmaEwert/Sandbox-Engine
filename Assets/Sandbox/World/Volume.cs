@@ -1,4 +1,5 @@
 namespace Sandbox {
+	using Unity.Jobs;
 	using Unity.Mathematics;
 	using UnityEngine;
 	using static Unity.Mathematics.math;
@@ -25,6 +26,19 @@ namespace Sandbox {
 				if (this[pos] == value) { return; }
 				var chunk = ChunkAt(pos);
 				chunk[(pos + MaxSize) % Chunk.Size] = value;
+			}
+		}
+
+		public void Generate() {
+			var handles = new JobHandle[ChunkDistance * ChunkDistance * ChunkDistance];
+			for (var z = 0; z < ChunkDistance; ++z)
+			for (var y = 0; y < ChunkDistance; ++y)
+			for (var x = 0; x < ChunkDistance; ++x) {
+				handles[x + y * ChunkDistance + z * ChunkDistance * ChunkDistance] =
+					chunks[x, y, z].Generate();
+			}
+			for (var i = 0; i < handles.Length; ++i) {
+				handles[i].Complete();
 			}
 		}
 

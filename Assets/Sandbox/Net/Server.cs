@@ -183,8 +183,6 @@
 			public NativeArray<NetworkConnection> connections;
 
 			public void Execute(int index) {
-				Assert.IsTrue(connections[index].IsCreated);
-
 				NetworkEvent.Type command;
 				while ((command = driver.PopEventForConnection(connections[index], out var streamReader)) != NetworkEvent.Type.Empty) {
 					switch (command) {
