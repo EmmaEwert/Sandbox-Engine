@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 170076734}
-  m_IndirectSpecularColor: {r: 0.6942086, g: 0.6769334, b: 0.67540973, a: 1}
+  m_IndirectSpecularColor: {r: 0.442248, g: 0.4224241, b: 0.4294594, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -644,7 +644,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 510754609}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -100, z: 0}
   m_LocalScale: {x: 1.03125, y: 1.03125, z: 1.03125}
   m_Children:
   - {fileID: 603937748}
@@ -689,8 +689,8 @@ Camera:
   m_GameObject: {fileID: 534669902}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0.12156863, g: 0.05882353, b: 0.24705882, a: 0}
   m_projectionMatrixMode: 1
   m_SensorSize: {x: 36, y: 24}
   m_LensShift: {x: 0, y: 0}
@@ -1675,8 +1675,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d2adc246fb66e042a9189510cf3d986, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  blockPrefab: {fileID: 1216065751685768698, guid: 18b22e32c10808142a0b1d961344c27c,
-    type: 3}
   blockMaterial: {fileID: 2100000, guid: 9b4dcef7e221b024eb781b738fc4cfdd, type: 2}
 --- !u!1 &1182188935
 GameObject:
