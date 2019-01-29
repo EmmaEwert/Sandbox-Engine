@@ -7,7 +7,6 @@ namespace Sandbox.Net {
 	using Unity.Networking.Transport;
 
 	public static class Client {
-		const float PacketLoss = 0f;
 		internal static Dictionary<int, string> players = new Dictionary<int, string>();
 		internal static int id;
 		static string name;
@@ -16,7 +15,6 @@ namespace Sandbox.Net {
 		static List<NativeArray<byte>> messages = new List<NativeArray<byte>>();
 		static JobHandle receiveJobHandle;
 		static JobHandle[] sendJobHandles = new JobHandle[0];
-		static Unity.Mathematics.Random random = new Unity.Mathematics.Random(1);
 
 		public static void Start(string ip, string name) {
 			driver = new BasicNetworkDriver<IPv4UDPSocket>(new INetworkParameter[0]);
@@ -71,17 +69,9 @@ namespace Sandbox.Net {
 			}
 		}
 
-		static void OnReceive(ConnectServerMessage message) {
-			id = message.id;
-		}
-
-		static void OnReceive(JoinMessage message) {
-			players[message.id] = message.name;
-		}
-
-		static void OnReceive(PingMessage message) {
-			message.Send();
-		}
+		static void OnReceive(ConnectServerMessage message) => id = message.id;
+		static void OnReceive(JoinMessage message) => players[message.id] = message.name;
+		static void OnReceive(PingMessage message) => message.Send();
 
 		internal static void Send(byte[] bytes) {
 			var data = new NativeArray<byte>(bytes, Allocator.TempJob);
@@ -92,11 +82,9 @@ namespace Sandbox.Net {
 			reader.Read(out ushort typeIndex);
 			var type = Message.Types[typeIndex];
 			var message = (Message)Activator.CreateInstance(type);
-			if (message is ReliableMessage && random.NextFloat() < PacketLoss) { return; }
 			message.Receive(reader);
 		}
 
-		//[BurstCompile]
 		struct ReceiveJob : IJob {
 			public BasicNetworkDriver<IPv4UDPSocket> driver;
 			[ReadOnly] public NativeArray<NetworkConnection> connection;
@@ -125,7 +113,6 @@ namespace Sandbox.Net {
 			}
 		}
 
-		//[BurstCompile]
 		struct SendJob : IJob {
 			public BasicNetworkDriver<IPv4UDPSocket> driver;
 			[ReadOnly] public NativeArray<NetworkConnection> connection;

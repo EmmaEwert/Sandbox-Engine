@@ -26,7 +26,6 @@ namespace Sandbox {
 
 		static void OnReceive(ButtonMessage message) {
 			if (message.button == 0) {
-				UnityEngine.Debug.Log(message.blockPosition);
 				var volume = world.volumes[0];
 				var chunk = volume.ChunkAt(message.blockPosition);
 				volume[message.blockPosition] = 0;

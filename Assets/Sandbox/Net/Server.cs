@@ -10,7 +10,6 @@
 	using UnityEngine.Assertions;
 
 	public static class Server {
-		const float PacketLoss = 0f;
 		public static Dictionary<int, string> players = new Dictionary<int, string>();
 		public static NetworkConnection[] Connections = new NetworkConnection[0];
 		static NativeList<NetworkConnection> connections;
@@ -21,7 +20,6 @@
 		static JobHandle[] sendJobHandles = new JobHandle[0];
 		static JobHandle[] broadcastJobHandles = new JobHandle[0];
 		static float ping;
-		static Unity.Mathematics.Random random = new Unity.Mathematics.Random(1);
 
 		public static IPAddress localIP {
 			get {
@@ -155,11 +153,9 @@
 			reader.Read(out ushort typeIndex);
 			var type = Message.Types[typeIndex];
 			var message = (Message)Activator.CreateInstance(type);
-			if (message is ReliableMessage && random.NextFloat() < PacketLoss) { return; }
 			message.Receive(reader, connection);
 		}
 
-		//[BurstCompile]
 		struct UpdateJob : IJob {
 			public BasicNetworkDriver<IPv4UDPSocket> driver;
 			public NativeList<NetworkConnection> connections;
@@ -182,7 +178,6 @@
 			}
 		}
 
-		//[BurstCompile]
 		struct ReceiveJob : IJobParallelFor {
 			public BasicNetworkDriver<IPv4UDPSocket>.Concurrent driver;
 			public NativeArray<NetworkConnection> connections;
@@ -207,7 +202,6 @@
 			}
 		}
 
-		//[BurstCompile]
 		struct SendJob : IJob {
 			public BasicNetworkDriver<IPv4UDPSocket>.Concurrent driver;
 			[ReadOnly] public NativeList<NetworkConnection> connections;
@@ -222,7 +216,6 @@
 			}
 		}
 
-		//[BurstCompile]
 		struct BroadcastJob : IJobParallelFor {
 			public BasicNetworkDriver<IPv4UDPSocket>.Concurrent driver;
 			[ReadOnly] public NativeArray<NetworkConnection> connections;

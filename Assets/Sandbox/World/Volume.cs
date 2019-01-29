@@ -21,19 +21,19 @@ namespace Sandbox {
 		public ushort this[int3 pos] {
 			get => ChunkAt(pos)?[(pos + MaxSize) % Chunk.Size] ?? 0;
 			set {
-				var chunk = ChunkAt(pos);
 				if (this[pos] == value) { return; }
+				var chunk = ChunkAt(pos);
 				chunk[(pos + MaxSize) % Chunk.Size] = value;
 			}
 		}
 
 		public Chunk ChunkAt(int3 pos) {
-			pos = ((pos + MaxSize) / Chunk.Size) % (ChunkDistance * 2);
+			pos = ((pos + MaxSize) / Chunk.Size) % (ChunkDistance * 1);
 			return chunks[pos.x, pos.y, pos.z];
 		}
 
 		public void ChunkAt(int3 pos, Chunk chunk) {
-			pos = ((pos + MaxSize) / Chunk.Size) % (ChunkDistance * 2);
+			pos = ((pos + MaxSize) / Chunk.Size) % (ChunkDistance * 1);
 			chunks[pos.x, pos.y, pos.z] = chunk;
 		}
 	}

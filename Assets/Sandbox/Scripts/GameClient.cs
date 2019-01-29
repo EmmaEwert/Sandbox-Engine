@@ -12,6 +12,7 @@ namespace Sandbox {
 
 		public static void Update() {
 			Client.Update();
+			world.Update();
 		}
 
 		public static void Stop() {

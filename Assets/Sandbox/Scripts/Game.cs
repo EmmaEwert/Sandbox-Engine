@@ -11,6 +11,7 @@ namespace Sandbox {
 		public bool server { get; set; } = false;
 
 		void Start() {
+			BlockManager.Start();
 			ReliableMessage.Start();
 			if (server) {
 				GameServer.Start(playerName);

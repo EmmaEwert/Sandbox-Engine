@@ -4,6 +4,7 @@ namespace Sandbox {
 	using System.Linq;
 
 	internal static class Reflector {
+		///<summary>Finds types that are children of the specified type.</summary>
 		public static List<System.Type> ImplementationsOf<T>() where T : class {
 			return AppDomain.CurrentDomain
 				.GetAssemblies()
@@ -13,7 +14,7 @@ namespace Sandbox {
 		}
 
 		///<summary>Creates new instances of types that are children of the specified type.</summary>
-		public static List<T> CreateInstancesOf<T>(params object[] constructorArgs) where T : class {
+		public static List<T> InstancesOf<T>(params object[] constructorArgs) where T : class {
 			var objects = new List<T>();
 			var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.GetTypes());
 			foreach (var type in types.Where(myType => myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf(typeof(T)))) {

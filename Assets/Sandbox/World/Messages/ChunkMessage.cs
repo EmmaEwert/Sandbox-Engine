@@ -17,7 +17,7 @@ namespace Sandbox {
 		public ChunkMessage(ushort volumeID, Chunk chunk) {
 			this.volumeID = volumeID;
 			this.pos = chunk.pos;
-			Buffer.BlockCopy(chunk.blocks, 0, blocks, 0, blocks.Length * sizeof(ushort));
+			Buffer.BlockCopy(chunk.ids, 0, blocks, 0, blocks.Length * sizeof(ushort));
 		}
 
 		public void Read(Reader reader) {

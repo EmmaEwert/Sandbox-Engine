@@ -26,14 +26,14 @@ namespace Sandbox.Net {
 			this.reader = new BinaryReader(stream);
 		}
 
-		internal void Read(ref ushort[] value) {
-			var bytes = reader.ReadBytes(sizeof(ushort) * value.Length);
-			Buffer.BlockCopy(bytes, 0, value, 0, bytes.Length);
-		}
-
 		public void Dispose() {
 			reader.Dispose();
 			stream.Dispose();
+		}
+
+		internal void Read(ref ushort[] value) {
+			var bytes = reader.ReadBytes(sizeof(ushort) * value.Length);
+			Buffer.BlockCopy(bytes, 0, value, 0, bytes.Length);
 		}
 
 		internal void Read(out ushort value) {
