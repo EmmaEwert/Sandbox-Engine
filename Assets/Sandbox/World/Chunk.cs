@@ -1,8 +1,5 @@
 namespace Sandbox {
 	using System.Collections.Generic;
-	using Unity.Burst;
-	using Unity.Collections;
-	using Unity.Jobs;
 	using Unity.Mathematics;
 	using UnityEngine;
 	using static Unity.Mathematics.math;
@@ -33,7 +30,7 @@ namespace Sandbox {
 			set => ids[dot(pos, PosToBlockIndex)] = value;
 		}
 
-		///<summary>Regenerates submeshes for each material in the chunk.</summary>
+		///<summary>Regenerates mesh for the chunk.</summary>
 		public void UpdateGeometry(Volume volume) {
 			var vertices = new List<Vector3>();
 			var uvs = new List<Vector2>();

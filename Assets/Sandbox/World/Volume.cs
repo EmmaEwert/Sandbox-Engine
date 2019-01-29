@@ -4,7 +4,8 @@ namespace Sandbox {
 	using static Unity.Mathematics.math;
 
 	public class Volume {
-		public const int ChunkDistance = 3;
+		public const int ChunkDistance = 8;
+		public const int SimDistance = ChunkDistance * Chunk.Size;
 		public const int MaxSize = (int.MaxValue / (Chunk.Size * Chunk.Size * Chunk.Size * 2)) * Chunk.Size * Chunk.Size * Chunk.Size;
 
 		public Chunk[,,] chunks = new Chunk[ChunkDistance, ChunkDistance, ChunkDistance];

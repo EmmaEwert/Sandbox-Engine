@@ -40,31 +40,7 @@ namespace Sandbox {
 					dirtyChunks.Enqueue(neighbor);
 				}
 			}
-			Benchmark.Benchmark.StartWatch("Update colliders");
-			foreach (Transform child in chunk.gameObject.transform) {
-				GameObject.Destroy(child.gameObject);
-			}
-			for (var z = pos.z; z < pos.z + Chunk.Size; ++z)
-			for (var y = pos.y; y < pos.y + Chunk.Size; ++y)
-			for (var x = pos.x; x < pos.x + Chunk.Size; ++x) {
-				if (volume[int3(x, y, z)] == 0) { continue; }
-				if (x > pos.x && volume[int3(x - 1, y, z)] != 0)
-					if (y > pos.y && volume[int3(x, y - 1, z)] != 0)
-						if (z > pos.z && volume[int3(x, y, z - 1)] != 0)
-							if (x < pos.x + Chunk.Size - 1 && volume[int3(x + 1, y, z)] != 0)
-								if (y < pos.y + Chunk.Size - 1 && volume[int3(x, y + 1, z)] != 0)
-									if (z < pos.z + Chunk.Size - 1 && volume[int3(x, y, z + 1)] != 0) {
-										continue;
-									}
-				var block = GameObject.Instantiate(WorldManager.BlockPrefab);
-				block.transform.parent = chunk.gameObject.transform;
-				block.transform.localPosition = float3(
-					(x + Volume.MaxSize) % Chunk.Size,
-					(y + Volume.MaxSize) % Chunk.Size,
-					(z + Volume.MaxSize) % Chunk.Size
-				);
-			}
-			Benchmark.Benchmark.StopWatches("ChunkMessage");
+			return;
 		}
 
 		public void Update() {

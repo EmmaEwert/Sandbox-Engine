@@ -1,5 +1,6 @@
 namespace Sandbox {
 	using System.Collections.Generic;
+	using Unity.Mathematics;
 
 	public abstract class Block {
 		public static List<Block> blocks;
@@ -17,6 +18,10 @@ namespace Sandbox {
 			}
 			this.defaultState = blockStates[defaultState];
 		}
+
+		///<summary>Collision and interaction box</summary>
+		public virtual Box Box(Volume volume, int3 pos) =>
+			new Box { min = pos, max = pos + 1 };
 
 		public enum Face : byte { Down, Up, South, North, West, East }
 	}
