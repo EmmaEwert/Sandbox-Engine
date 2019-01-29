@@ -23,6 +23,6 @@ namespace Sandbox {
 		public virtual Box Box(Volume volume, int3 pos) =>
 			new Box { min = pos, max = pos + 1 };
 
-		public enum Face : byte { Down, Up, South, North, West, East }
+		public enum Face : byte { None, Down, Up, South, North, West, East }
 	}
 }

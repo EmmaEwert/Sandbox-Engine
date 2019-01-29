@@ -1,6 +1,5 @@
 namespace Sandbox {
 	using Sandbox.Net;
-	using System;
 	using Unity.Mathematics;
 
 	public class ChunkMessage : ReliableMessage, IServerMessage {

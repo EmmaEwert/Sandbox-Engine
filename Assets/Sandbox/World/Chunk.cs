@@ -6,21 +6,30 @@ namespace Sandbox {
 	using Unity.Mathematics;
 	using UnityEngine;
 	using static Unity.Mathematics.math;
-	using static Unity.Mathematics.math_2;
 
 	public class Chunk {
 		public const int Size = 16;
 		static int3 PosToBlockIndex = int3(1, Size, Size * Size);
-		static (int3 normal, byte mask)[] faceNormals = new (int3, byte)[] {
-			(int3( 0, -1,  0), 1 << (byte)Block.Face.Down),
-			(int3( 0,  1,  0), 1 << (byte)Block.Face.Up),
-			(int3( 0,  0, -1), 1 << (byte)Block.Face.South),
-			(int3( 0,  0,  1), 1 << (byte)Block.Face.North),
-			(int3(-1,  0,  0), 1 << (byte)Block.Face.West),
-			(int3( 1,  0,  0), 1 << (byte)Block.Face.East),
+		static int3[] faceNormals = new [] {
+			int3( 0,  0,  0),
+			int3( 0, -1,  0),
+			int3( 0,  1,  0),
+			int3( 0,  0, -1),
+			int3( 0,  0,  1),
+			int3(-1,  0,  0),
+			int3( 1,  0,  0)
+		};
+		static Block.Face[] faceValues = new [] {
+			Block.Face.None,
+			Block.Face.Down,
+			Block.Face.Up,
+			Block.Face.South,
+			Block.Face.North,
+			Block.Face.West,
+			Block.Face.East
 		};
 
-		public NativeArray<ushort> ids;// = new ushort[Size * Size * Size];
+		public NativeArray<ushort> ids;
 		public int3 pos;
 		public GameObject gameObject;
 
@@ -47,29 +56,37 @@ namespace Sandbox {
 
 		///<summary>Regenerates mesh for the chunk.</summary>
 		public void UpdateGeometry(Volume volume) {
+			var opaqueBlocks = new bool[Size * Size * Size];
+			for (var z = 0; z < Size; ++z)
+			for (var y = 0; y < Size; ++y)
+			for (var x = 0; x < Size; ++x) {
+				var neighbor = this[int3(x, y, z)];
+				opaqueBlocks[x + y * Size + z * Size * Size] =
+					neighbor != 0 && BlockState.blockStates[neighbor].block.opaqueCube;
+			}
+
 			var vertices = new List<Vector3>();
 			var uvs = new List<Vector2>();
 			var normals = new List<Vector3>();
 			var triangles = new List<int>();
-			for (var z = 0; z < Size; ++z)
-			for (var y = 0; y < Size; ++y)
-			for (var x = 0; x < Size; ++x) {
-				var stateID = this[int3(x, y, z)];
+			for (var pos = int3(0); pos.z < Size; ++pos.z)
+			for (pos.y = 0; pos.y < Size; ++pos.y)
+			for (pos.x = 0; pos.x < Size; ++pos.x) {
+				var stateID = this[pos];
 				if (stateID == 0) { continue; }
-				var index = x + y * Size + z * Size * Size;
+				var index = dot(pos, PosToBlockIndex);
 				var state = BlockState.blockStates[stateID];
-				var stateModel = state.Model(volume, pos + int3(x, y, z));
+				var stateModel = state.models[0];
 				var faces = stateModel.model.faces;
-				var vertexOffset = float3(x, y, z);
 				for (var i = 0; i < faces.Length; ++i) {
 					var face = faces[i];
-					var faceNormal = faceNormals[log2_floor(face.cullface)];
-					if ((face.cullface & faceNormal.mask) != 0) {
-						var neighborPos = int3(x, y, z) + faceNormal.normal;
+					var faceIndex = (byte)face.cullface;
+					var faceMask = faceValues[faceIndex];
+					if (face.cullface == faceMask) {
+						var faceNormal = Chunk.faceNormals[faceIndex];
+						var neighborPos = pos + faceNormal;
 						if (all(neighborPos >= 0) && all(neighborPos < Size)) {
-							var neighbor = this[neighborPos];
-							//var neighbor = volume[int3(x, y, z) + this.pos + faceNormal.normal];
-							if (neighbor != 0 && BlockState.blockStates[neighbor].block.opaqueCube) {
+							if (opaqueBlocks[dot(neighborPos, PosToBlockIndex)]) {
 								continue;
 							}
 						}
@@ -78,13 +95,12 @@ namespace Sandbox {
 						triangles.Add(face.triangles[j] + vertices.Count);
 					}
 					for (var j = 0; j < 4; ++j) {
-						vertices.Add(RotateAroundPivot(face.positions[j], float3(0.5f), float3(stateModel.x, stateModel.y, 0f)) + vertexOffset);
+						vertices.Add(RotateAroundPivot(face.positions[j], float3(0.5f), float3(stateModel.x, stateModel.y, 0f)) + pos);
 						uvs.Add(face.uvs[j]); // TODO: uvlock
 						normals.Add(face.normal);
 					}
 				}
 			}
-
 			var mesh = new Mesh();
 			mesh.SetVertices(vertices);
 			mesh.SetNormals(normals);

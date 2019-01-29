@@ -26,7 +26,7 @@ namespace Sandbox {
 			var chunk = volume.ChunkAt(pos);
 			chunk.ids.CopyFrom(message.blocks);
 			chunk.UpdateGeometry(volume);
-			Benchmark.Benchmark.StopWatch("Update geometry");
+			Benchmark.Benchmark.StopWatches("ChunkMessage");
 		}
 
 		public void Update() {

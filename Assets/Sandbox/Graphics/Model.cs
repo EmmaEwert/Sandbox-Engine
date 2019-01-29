@@ -9,7 +9,7 @@ namespace Sandbox {
 		public string parent;
 		public Dictionary<string, string> textureVariables = new Dictionary<string, string>();
 		public Element[] elements = new Element[0];
-		public (float3[] positions, float2[] uvs, float3 normal, int[] triangles, byte cullface)[] faces;
+		public Face[] faces;
 
 		public Model(string name) {
 			var json = File.ReadAllText($"Resources/models/{name}.json");
@@ -63,7 +63,7 @@ namespace Sandbox {
 					}
 				}
 			}
-			faces = new (float3[], float2[], float3, int[], byte)[faceCount];
+			faces = new Face[faceCount];
 		}
 
 		///<summary>Generates faces with correct UVs based on texture</summary>
@@ -154,12 +154,25 @@ namespace Sandbox {
 							triangles = new [] { 0, 1, 2, 0, 3, 1 };
 							break;
 					}
-					faces[faceIndex] = (positions, uvs, normal, triangles, face.Value.cullface);
+					faces[faceIndex] = new Face {
+						positions = positions,
+						uvs = uvs,
+						normal = normal,
+						triangles = triangles,
+						cullface = face.Value.cullface
+					};
 					++faceIndex;
 				}
 			}
 		}
 
+		public struct Face {
+			public float3[] positions;
+			public float2[] uvs;
+			public float3 normal;
+			public int[] triangles;
+			public Block.Face cullface;
+		}
 
 		public class Element {
 			public int3 from;
@@ -187,18 +200,18 @@ namespace Sandbox {
 
 			public class Face {
 				public string texture;
-				public byte cullface;
+				public Block.Face cullface;
 				public int4 uv;
 
 				public Face(JToken face) {
 					texture = (string)face["texture"];
 					switch ((string)face["cullface"]) {
-						case "down": cullface = 1 << (byte)Block.Face.Down; break;
-						case "up": cullface = 1 << (byte)Block.Face.Up; break;
-						case "north": cullface = 1 << (byte)Block.Face.South; break;
-						case "south": cullface = 1 << (byte)Block.Face.North; break;
-						case "west": cullface = 1 << (byte)Block.Face.West; break;
-						case "east": cullface = 1 << (byte)Block.Face.East; break;
+						case "down": cullface = Block.Face.Down; break;
+						case "up": cullface = Block.Face.Up; break;
+						case "north": cullface = Block.Face.South; break;
+						case "south": cullface = Block.Face.North; break;
+						case "west": cullface = Block.Face.West; break;
+						case "east": cullface = Block.Face.East; break;
 					}
 					var uv = (JArray)face["uv"];
 					if (uv != null) {
