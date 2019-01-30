@@ -11,16 +11,16 @@ namespace Sandbox {
 				volume[pos + int3(0, -1, 0)] = volume[pos];
 				volume[pos] = 0;
 			} else if (volume[pos + int3(0, -1, -1)] == 0) {
-				volume[pos + int3(0, -1, -1)] = volume[pos];
+				volume[pos + int3(0, 0, -1)] = volume[pos];
 				volume[pos] = 0;
 			} else if (volume[pos + int3(0, -1, 1)] == 0) {
-				volume[pos + int3(0, -1, 1)] = volume[pos];
+				volume[pos + int3(0, 0, 1)] = volume[pos];
 				volume[pos] = 0;
 			} else if (volume[pos + int3(-1, -1, 0)] == 0) {
-				volume[pos + int3(-1, -1, 0)] = volume[pos];
+				volume[pos + int3(-1, 0, 0)] = volume[pos];
 				volume[pos] = 0;
 			} else if (volume[pos + int3(1, -1, 0)] == 0) {
-				volume[pos + int3(1, -1, 0)] = volume[pos];
+				volume[pos + int3(1, 0, 0)] = volume[pos];
 				volume[pos] = 0;
 			}
 		}

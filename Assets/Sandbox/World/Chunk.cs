@@ -10,24 +10,6 @@ namespace Sandbox {
 	public class Chunk {
 		public const int Size = 16;
 		static int3 PosToBlockIndex = int3(1, Size, Size * Size);
-		static int3[] faceNormals = new [] {
-			int3( 0,  0,  0),
-			int3( 0, -1,  0),
-			int3( 0,  1,  0),
-			int3( 0,  0, -1),
-			int3( 0,  0,  1),
-			int3(-1,  0,  0),
-			int3( 1,  0,  0)
-		};
-		static Block.Face[] faceValues = new [] {
-			Block.Face.None,
-			Block.Face.Down,
-			Block.Face.Up,
-			Block.Face.South,
-			Block.Face.North,
-			Block.Face.West,
-			Block.Face.East
-		};
 
 		public ushort[] ids = new ushort[Size * Size * Size];
 		public int3 pos;
@@ -43,15 +25,15 @@ namespace Sandbox {
 		public ushort this[int3 pos] {
 			get => ids[dot(pos, PosToBlockIndex)];
 			set {
-				var index = dot(pos, PosToBlockIndex);
+				var index = dot(PosToBlockIndex, pos);
 				dirty = ids[index] != value;
 				flags[index] |= dirty ? Flag.Dirty : Flag.None;
-				if (pos.x % Size > 0) { flags[dot(pos + int3(-1,  0,  0), PosToBlockIndex)] |= dirty ? Flag.Dirty : Flag.None; }
-				if (pos.y % Size > 0) { flags[dot(pos + int3( 0, -1,  0), PosToBlockIndex)] |= dirty ? Flag.Dirty : Flag.None; }
-				if (pos.z % Size > 0) { flags[dot(pos + int3( 0,  0, -1), PosToBlockIndex)] |= dirty ? Flag.Dirty : Flag.None; }
-				if (pos.x % Size < Size - 1) { flags[dot(pos + int3( 1,  0,  0), PosToBlockIndex)] |= dirty ? Flag.Dirty : Flag.None; }
-				if (pos.y % Size < Size - 1) { flags[dot(pos + int3( 0,  1,  0), PosToBlockIndex)] |= dirty ? Flag.Dirty : Flag.None; }
-				if (pos.z % Size < Size - 1) { flags[dot(pos + int3( 0,  0,  1), PosToBlockIndex)] |= dirty ? Flag.Dirty : Flag.None; }
+				if (pos.x % Size > 0) { flags[dot(PosToBlockIndex, pos + int3(-1,  0,  0))] |= dirty ? Flag.Dirty : Flag.None; }
+				if (pos.y % Size > 0) { flags[dot(PosToBlockIndex, pos + int3( 0, -1,  0))] |= dirty ? Flag.Dirty : Flag.None; }
+				if (pos.z % Size > 0) { flags[dot(PosToBlockIndex, pos + int3( 0,  0, -1))] |= dirty ? Flag.Dirty : Flag.None; }
+				if (pos.x % Size < Size - 1) { flags[dot(PosToBlockIndex, pos + int3( 1,  0,  0))] |= dirty ? Flag.Dirty : Flag.None; }
+				if (pos.y % Size < Size - 1) { flags[dot(PosToBlockIndex, pos + int3( 0,  1,  0))] |= dirty ? Flag.Dirty : Flag.None; }
+				if (pos.z % Size < Size - 1) { flags[dot(PosToBlockIndex, pos + int3( 0,  0,  1))] |= dirty ? Flag.Dirty : Flag.None; }
 				ids[index] = value;
 			}
 		}
@@ -62,7 +44,7 @@ namespace Sandbox {
 				if ((flags[i] & Flag.Dirty) != 0) {
 					flags[i] &= ~Flag.Dirty;
 					if (ids[i] == 0) { continue; }
-					var pos = this.pos + int3(i % Size, i / Size % Size, i / Size / Size);
+					var pos = this.pos + i / PosToBlockIndex % Size;
 					BlockState.blockStates[ids[i]].block.OnPlaced(volume, pos);
 				}
 			}
@@ -110,16 +92,14 @@ namespace Sandbox {
 			for (pos.x = 0; pos.x < Size; ++pos.x) {
 				var stateID = this[pos];
 				if (stateID == 0) { continue; }
-				var index = dot(pos, PosToBlockIndex);
+				var index = dot(PosToBlockIndex, pos);
 				var state = BlockState.blockStates[stateID];
 				var stateModel = state.models[0];
 				var faces = stateModel.model.faces;
 				for (var i = 0; i < faces.Length; ++i) {
 					var face = faces[i];
-					var faceIndex = (byte)face.cullface;
-					var faceMask = faceValues[faceIndex];
-					if (face.cullface == faceMask) {
-						var faceNormal = Chunk.faceNormals[faceIndex];
+					if (face.cullface != Block.Face.None) {
+						var faceNormal = BlockUtility.Normals[(byte)face.cullface];
 						var neighborPos = pos + faceNormal;
 						if (all(neighborPos >= 0) && all(neighborPos < Size)) {
 							if (opaqueBlocks[dot(neighborPos, PosToBlockIndex)]) {
@@ -131,7 +111,7 @@ namespace Sandbox {
 						triangles.Add(face.triangles[j] + vertices.Count);
 					}
 					for (var j = 0; j < 4; ++j) {
-						vertices.Add(RotateAroundPivot(face.positions[j], float3(0.5f), float3(stateModel.x, stateModel.y, 0f)) + pos);
+						vertices.Add(Math.RotateAroundPivot(face.positions[j], float3(0.5f), float3(stateModel.x, stateModel.y, 0f)) + pos);
 						uvs.Add(face.uvs[j]); // TODO: uvlock
 						normals.Add(face.normal);
 					}
@@ -144,10 +124,6 @@ namespace Sandbox {
 			mesh.SetTriangles(triangles, 0);
 			gameObject.GetComponent<MeshFilter>().sharedMesh = mesh;
 			mesh.UploadMeshData(markNoLongerReadable: true);
-		}
-
-		static float3 RotateAroundPivot(float3 point, float3 pivot, float3 angles) {
-			return float3(Quaternion.Euler(angles) * (point - pivot)) + pivot;
 		}
 
 		public enum Flag : byte {
