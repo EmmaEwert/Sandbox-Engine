@@ -50,7 +50,9 @@ namespace Sandbox {
 		public JobHandle Generate() {
 			return new GenerateJob {
 				pos = pos,
-				ids = this.ids
+				ids = this.ids,
+				dirt = BlockManager.Default("dirt").id,
+				stone = BlockManager.Default("stone").id,
 			}.Schedule(ids.Length, Size);
 		}
 
@@ -118,6 +120,8 @@ namespace Sandbox {
 		struct GenerateJob : IJobParallelFor {
 			[ReadOnly] public int3 pos;
 			[WriteOnly] public NativeArray<ushort> ids;
+			[ReadOnly] public ushort dirt;
+			[ReadOnly] public ushort stone;
 
 			public void Execute(int index) {
 				var x = pos.x + index % Size;
@@ -125,7 +129,7 @@ namespace Sandbox {
 				var z = pos.z + (index / Size / Size) % Size;
 				if (y < Chunk.Size * Volume.ChunkDistance / 2) {
 					var noise = Mathf.PerlinNoise(x / 30f, z / 30f);
-					ids[index] = (ushort)(noise > 0.5f ? 3 : 2); // BlockManager.Default("sand").id;
+					ids[index] = (ushort)(noise > 0.5f ? dirt : stone);
 				}
 			}
 		}

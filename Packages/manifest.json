@@ -5,10 +5,18 @@
     "com.unity.jobs": "0.0.7-preview.6",
     "com.unity.mathematics": "0.0.12-preview.19",
     "com.unity.package-manager-ui": "2.0.3",
+    "com.unity.render-pipelines.core": "4.9.0-preview",
     "com.unity.transport": "file:../../multiplayer/com.unity.transport",
     "com.unity.modules.audio": "1.0.0",
     "com.unity.modules.imageconversion": "1.0.0",
+    "com.unity.modules.imgui": "1.0.0",
+    "com.unity.modules.jsonserialize": "1.0.0",
+    "com.unity.modules.physics": "1.0.0",
     "com.unity.modules.ui": "1.0.0",
-    "com.unity.modules.umbra": "1.0.0"
+    "com.unity.modules.umbra": "1.0.0",
+    "com.unity.modules.unityanalytics": "1.0.0",
+    "com.unity.modules.unitywebrequest": "1.0.0",
+    "com.unity.modules.vr": "1.0.0",
+    "com.unity.modules.xr": "1.0.0"
   }
 }
