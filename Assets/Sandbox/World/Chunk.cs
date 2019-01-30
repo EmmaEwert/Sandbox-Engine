@@ -29,31 +29,65 @@ namespace Sandbox {
 			Block.Face.East
 		};
 
-		public NativeArray<ushort> ids;
+		public ushort[] ids = new ushort[Size * Size * Size];
 		public int3 pos;
 		public GameObject gameObject;
+		public bool dirty;
+		NativeArray<ushort> generatedIDs;
+		Flag[] flags = new Flag[Size * Size * Size];
 
 		public Chunk(int3 pos) {
-			this.ids = new NativeArray<ushort>(Size * Size * Size, Allocator.Persistent);
 			this.pos = pos;
-		}
-
-		~Chunk() {
-			ids.Dispose();
 		}
 
 		public ushort this[int3 pos] {
 			get => ids[dot(pos, PosToBlockIndex)];
-			set => ids[dot(pos, PosToBlockIndex)] = value;
+			set {
+				var index = dot(pos, PosToBlockIndex);
+				dirty = ids[index] != value;
+				flags[index] |= dirty ? Flag.Dirty : Flag.None;
+				if (pos.x % Size > 0) { flags[dot(pos + int3(-1,  0,  0), PosToBlockIndex)] |= dirty ? Flag.Dirty : Flag.None; }
+				if (pos.y % Size > 0) { flags[dot(pos + int3( 0, -1,  0), PosToBlockIndex)] |= dirty ? Flag.Dirty : Flag.None; }
+				if (pos.z % Size > 0) { flags[dot(pos + int3( 0,  0, -1), PosToBlockIndex)] |= dirty ? Flag.Dirty : Flag.None; }
+				if (pos.x % Size < Size - 1) { flags[dot(pos + int3( 1,  0,  0), PosToBlockIndex)] |= dirty ? Flag.Dirty : Flag.None; }
+				if (pos.y % Size < Size - 1) { flags[dot(pos + int3( 0,  1,  0), PosToBlockIndex)] |= dirty ? Flag.Dirty : Flag.None; }
+				if (pos.z % Size < Size - 1) { flags[dot(pos + int3( 0,  0,  1), PosToBlockIndex)] |= dirty ? Flag.Dirty : Flag.None; }
+				ids[index] = value;
+			}
+		}
+
+		public void Update(Volume volume) {
+			if (!dirty) { return; }
+			for (var i = 0; i < ids.Length; ++i) {
+				if ((flags[i] & Flag.Dirty) != 0) {
+					flags[i] &= ~Flag.Dirty;
+					if (ids[i] == 0) { continue; }
+					var pos = this.pos + int3(i % Size, i / Size % Size, i / Size / Size);
+					BlockState.blockStates[ids[i]].block.OnPlaced(volume, pos);
+				}
+			}
+			dirty = false;
+			for (var i = 0; i < ids.Length; ++i) {
+				if ((flags[i] & Flag.Dirty) != 0) {
+					dirty = true;
+					return;
+				}
+			}
 		}
 
 		public JobHandle Generate() {
+			generatedIDs = new NativeArray<ushort>(this.ids, Allocator.TempJob);
 			return new GenerateJob {
 				pos = pos,
-				ids = this.ids,
 				dirt = BlockManager.Default("dirt").id,
 				stone = BlockManager.Default("stone").id,
+				ids = generatedIDs,
 			}.Schedule(ids.Length, Size);
+		}
+
+		public void AssignGeneratedIDs() {
+			generatedIDs.CopyTo(ids);
+			generatedIDs.Dispose();
 		}
 
 		///<summary>Regenerates mesh for the chunk.</summary>
@@ -116,12 +150,17 @@ namespace Sandbox {
 			return float3(Quaternion.Euler(angles) * (point - pivot)) + pivot;
 		}
 
+		public enum Flag : byte {
+			None = 0b00000000,
+			Dirty = 0b00000001,
+		}
+
 		[BurstCompile]
 		struct GenerateJob : IJobParallelFor {
 			[ReadOnly] public int3 pos;
-			[WriteOnly] public NativeArray<ushort> ids;
 			[ReadOnly] public ushort dirt;
 			[ReadOnly] public ushort stone;
+			[WriteOnly] public NativeArray<ushort> ids;
 
 			public void Execute(int index) {
 				var x = pos.x + index % Size;

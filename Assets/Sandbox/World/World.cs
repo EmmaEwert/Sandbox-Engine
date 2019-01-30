@@ -9,6 +9,7 @@ namespace Sandbox {
 		
 		public static void OnReceive(VolumeMessage message) {
 			var volume = GameClient.world.volumes[message.id] = new Volume();
+			volume.id = message.id;
 			volume.gameObject = new GameObject("Volume");
 			volume.gameObject.transform.position = Vector3.one * -Volume.ChunkDistance * Chunk.Size / 2;
 			foreach (var chunk in volume.chunks) {
@@ -20,24 +21,25 @@ namespace Sandbox {
 		}
 
 		public static void OnReceive(ChunkMessage message) {
-			Benchmark.Benchmark.StartWatch("Update geometry");
+			//Benchmark.Benchmark.StartWatch("Update geometry");
 			var volume = GameClient.world.volumes[message.volumeID];
 			var pos = message.pos;
 			var chunk = volume.ChunkAt(pos);
-			chunk.ids.CopyFrom(message.blocks);
+			chunk.ids = message.ids;
 			chunk.UpdateGeometry(volume);
-			Benchmark.Benchmark.StopWatches("ChunkMessage");
+			//Benchmark.Benchmark.StopWatches("ChunkMessage");
 		}
 
 		public void Update() {
-			//if (dirtyChunks.Count > 0) {
-				//dirtyChunks.Dequeue().UpdateGeometry(volumes[0]);
-			//}
+			foreach (var volume in volumes.Values) {
+				volume.Update();
+			}
 		}
 
 		internal void Generate() {
 			volumes[0] = new Volume();
 			volumes[0].Generate();
+			volumes[0].id = 0;
 			return;
 		}
 

@@ -9,6 +9,7 @@ namespace Sandbox {
 		public const int SimDistance = ChunkDistance * Chunk.Size;
 		public const int MaxSize = (int.MaxValue / (Chunk.Size * Chunk.Size * Chunk.Size * 2)) * Chunk.Size * Chunk.Size * Chunk.Size;
 
+		public ushort id;
 		public Chunk[,,] chunks = new Chunk[ChunkDistance, ChunkDistance, ChunkDistance];
 		public GameObject gameObject;
 
@@ -29,6 +30,17 @@ namespace Sandbox {
 			}
 		}
 
+		public void Update() {
+			for (var z = 0; z < ChunkDistance; ++z)
+			for (var y = 0; y < ChunkDistance; ++y)
+			for (var x = 0; x < ChunkDistance; ++x) {
+				chunks[x, y, z].Update(this);
+				if (chunks[x, y, z].dirty) {
+					new ChunkMessage(id, chunks[x, y, z]).Broadcast();
+				}
+			}
+		}
+
 		public void Generate() {
 			var handles = new JobHandle[ChunkDistance * ChunkDistance * ChunkDistance];
 			for (var z = 0; z < ChunkDistance; ++z)
@@ -39,6 +51,7 @@ namespace Sandbox {
 			}
 			for (var i = 0; i < handles.Length; ++i) {
 				handles[i].Complete();
+				chunks[i % ChunkDistance, i / ChunkDistance % ChunkDistance, i / ChunkDistance / ChunkDistance].AssignGeneratedIDs();
 			}
 		}
 

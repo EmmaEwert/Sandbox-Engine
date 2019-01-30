@@ -1,4 +1,5 @@
 namespace Sandbox {
+	using System.Threading.Tasks;
 	using Benchmark;
 	using Sandbox.Net;
 	using static Unity.Mathematics.math;
@@ -21,6 +22,8 @@ namespace Sandbox {
 			Benchmark.StartWatch("Client start");
 			GameClient.Start(Server.localIP.ToString(), playerName);
 			Benchmark.StopWatches("Start Game");
+
+			FixedUpdate();
 		}
 
 		public static void Update() {
@@ -31,6 +34,13 @@ namespace Sandbox {
 		public static void Stop() {
 			Server.Stop();
 			GameClient.Stop();
+		}
+
+		public static async void FixedUpdate() {
+			for (;;) {
+				await Task.Delay(50);
+				world.Update();
+			}
 		}
 
 		static void OnReceive(ButtonMessage message) {
@@ -58,6 +68,7 @@ namespace Sandbox {
 			var volume = world.volumes[0];
 			var chunk = volume.ChunkAt(message.blockPosition);
 			volume[message.blockPosition] = BlockManager.Default("sand").id;
+			//BlockManager.Default("sand").block.OnPlaced(volume, message.blockPosition);
 			new ChunkMessage(volumeID: 0, chunk).Broadcast();
 		}
 	}
