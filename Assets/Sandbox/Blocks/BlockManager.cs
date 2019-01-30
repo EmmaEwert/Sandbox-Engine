@@ -25,6 +25,10 @@ namespace Sandbox {
 			return blocks[name];
 		}
 
+		public static Block Block(int id) {
+			return BlockState.blockStates[id].block;
+		}
+
 		public static Dictionary<string, BlockState> Load(string name) {
 			if (!blockStates.TryGetValue(name, out var variants)) {
 				blockStates[name] = new Dictionary<string, BlockState>();

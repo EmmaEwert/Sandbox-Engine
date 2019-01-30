@@ -48,19 +48,16 @@ namespace Sandbox {
 				var volume = world.volumes[0];
 				var chunk = volume.ChunkAt(message.blockPosition);
 				volume[message.blockPosition] = 0;
-				new ChunkMessage(volumeID: 0, chunk).Broadcast();
 			}
 		}
 
 		static void OnReceive(ConnectClientMessage message) {
-			Benchmark.StartWatch("New player chunk messages");
 			foreach (var volume in world.volumes) {
 				new VolumeMessage(volume.Key).Send(message.connection);
 				foreach (var chunk in volume.Value.chunks) {
 					new ChunkMessage(volume.Key, chunk).Send(message.connection);
 				}
 			}
-			Benchmark.StopWatches("ConnectClientMessage");
 		}
 
 		static void OnReceive(PlaceBlockMessage message) {
@@ -68,8 +65,6 @@ namespace Sandbox {
 			var volume = world.volumes[0];
 			var chunk = volume.ChunkAt(message.blockPosition);
 			volume[message.blockPosition] = BlockManager.Default("sand").id;
-			//BlockManager.Default("sand").block.OnPlaced(volume, message.blockPosition);
-			new ChunkMessage(volumeID: 0, chunk).Broadcast();
 		}
 	}
 }

@@ -25,7 +25,7 @@ namespace Sandbox {
 			var volume = GameClient.world.volumes[message.volumeID];
 			var pos = message.pos;
 			var chunk = volume.ChunkAt(pos);
-			chunk.ids = message.ids;
+			chunk.IDs(message.ids);
 			chunk.UpdateGeometry(volume);
 			//Benchmark.Benchmark.StopWatches("ChunkMessage");
 		}

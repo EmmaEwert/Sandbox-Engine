@@ -17,14 +17,14 @@ namespace Sandbox {
 			for (var z = 0; z < ChunkDistance; ++z)
 			for (var y = 0; y < ChunkDistance; ++y)
 			for (var x = 0; x < ChunkDistance; ++x) {
-				chunks[x, y, z] = new Chunk(int3(x, y, z) * Chunk.Size);
+				chunks[x, y, z] = new Chunk(int3(x, y, z) * Chunk.Size, this);
 			}
 		}
 
 		public ushort this[int3 pos] {
 			get => ChunkAt(pos)?[(pos + MaxSize) % Chunk.Size] ?? 0;
 			set {
-				if (this[pos] == value) { return; }
+				//if (this[pos] == value) { return; }
 				var chunk = ChunkAt(pos);
 				chunk[(pos + MaxSize) % Chunk.Size] = value;
 			}
@@ -34,11 +34,22 @@ namespace Sandbox {
 			for (var z = 0; z < ChunkDistance; ++z)
 			for (var y = 0; y < ChunkDistance; ++y)
 			for (var x = 0; x < ChunkDistance; ++x) {
-				chunks[x, y, z].Update(this);
 				if (chunks[x, y, z].dirty) {
+					chunks[x, y, z].PreUpdate(this);
+				}
+			}
+			for (var z = 0; z < ChunkDistance; ++z)
+			for (var y = 0; y < ChunkDistance; ++y)
+			for (var x = 0; x < ChunkDistance; ++x) {
+				if (chunks[x, y, z].dirty) {
+					chunks[x, y, z].Update(this);
 					new ChunkMessage(id, chunks[x, y, z]).Broadcast();
 				}
 			}
+		}
+
+		public void Set(int3 pos, Chunk.Flag flag) {
+			ChunkAt(pos).Set((pos + MaxSize) % Chunk.Size, flag);
 		}
 
 		public void Generate() {

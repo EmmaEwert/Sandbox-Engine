@@ -23,7 +23,7 @@ namespace Sandbox {
 		public virtual Box Box(Volume volume, int3 pos) =>
 			new Box { min = pos, max = pos + 1 };
 		
-		public virtual void OnPlaced(Volume volume, int3 pos) { }
+		public virtual void OnUpdated(Volume volume, int3 pos) { }
 
 		public enum Face : byte { None, Down, Up, South, North, West, East }
 	}
