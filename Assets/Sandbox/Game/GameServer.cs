@@ -64,7 +64,7 @@ namespace Sandbox {
 			if (any(message.blockPosition < 0) || any(message.blockPosition >= Volume.ChunkDistance * Chunk.Size)) { return; }
 			var volume = world.volumes[0];
 			var chunk = volume.ChunkAt(message.blockPosition);
-			volume[message.blockPosition] = BlockManager.Default("sand").id;
+			volume[message.blockPosition] = message.id;
 		}
 	}
 }

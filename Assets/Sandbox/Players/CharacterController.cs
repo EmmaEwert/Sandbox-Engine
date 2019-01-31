@@ -1,7 +1,7 @@
 ﻿namespace Sandbox {
-	using Sandbox.Net;
 	using Unity.Mathematics;
 	using UnityEngine;
+	using UnityEngine.UI;
 	using static Unity.Mathematics.math;
 
 	public class CharacterController : MonoBehaviour {
@@ -11,9 +11,11 @@
 		public Transform lineBox => GameObject.Find("Line Box").transform;
 		float speed = 4f;
 		float3 velocity;
+		ushort blockID;
 
 		void Awake() {
 			instance = this;
+			blockID = BlockManager.Default("sand").id;
 		}
 
 		void OnEnable() {
@@ -28,6 +30,19 @@
 
 		void Update() {
 			var volume = GameClient.world.volumes[0];
+
+			// Block selection
+			if (Input.GetKeyDown(KeyCode.Alpha1)) {
+				blockID = BlockManager.Default("sand").id;
+			} else if (Input.GetKeyDown(KeyCode.Alpha2)) {
+				blockID = BlockManager.Default("cobblestone").id;
+			} else if (Input.GetKeyDown(KeyCode.Alpha3)) {
+				blockID = BlockManager.Default("stone").id;
+			} else if (Input.GetKeyDown(KeyCode.Alpha4)) {
+				blockID = BlockManager.Default("dirt").id;
+			}
+			GameObject.Find("Selected Block").GetComponent<Text>().text =
+				BlockManager.Block(blockID).GetType().Name;
 
 			// Aiming
 			var aim = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
@@ -73,7 +88,7 @@
 					new ButtonMessage(0, hit.position).Send();
 				}
 				if (Input.GetButtonDown("Fire2")) {
-					new PlaceBlockMessage(hit.position + int3(hit.normal)).Send();
+					new PlaceBlockMessage(hit.position + int3(hit.normal), blockID).Send();
 				}
 			} else {
 				lineBox.position = float3(0, 0, -1000);
