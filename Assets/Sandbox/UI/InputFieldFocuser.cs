@@ -15,11 +15,11 @@
 				inputField.ActivateInputField();
 				enabled = false;
 				background.SetActive(true);
-				if (CharacterController.instance) {
-					CharacterController.instance.enabled = false;
+				if (PlayerController.instance) {
+					PlayerController.instance.enabled = false;
 				}
-			} else if (CharacterController.instance) {
-				CharacterController.instance.enabled = true;
+			} else if (PlayerController.instance) {
+				PlayerController.instance.enabled = true;
 			}
 		}
 	}

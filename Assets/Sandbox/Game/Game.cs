@@ -1,4 +1,5 @@
 namespace Sandbox {
+	using Sandbox.Core;
 	using Sandbox.Net;
 	using UnityEngine;
 

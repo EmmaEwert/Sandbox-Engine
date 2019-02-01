@@ -1,11 +1,12 @@
 namespace Sandbox {
 	using System.Threading.Tasks;
 	using Benchmark;
+	using Sandbox.Core;
 	using Sandbox.Net;
 	using static Unity.Mathematics.math;
 
 	public static class GameServer {
-		public static World world = new World();
+		public static Universe universe = new Universe();
 		public static bool running = false;
 
 		public static void Start(string playerName) {
@@ -13,7 +14,7 @@ namespace Sandbox {
 			Message.RegisterServerHandler<ConnectClientMessage>(OnReceive);
 			Message.RegisterServerHandler<PlaceBlockMessage>(OnReceive);
 			Benchmark.StartWatch("World generation");
-			world.Generate();
+			universe.Generate();
 			Benchmark.StopWatch("World generation");
 
 			Benchmark.StartWatch("Server start");
@@ -42,20 +43,20 @@ namespace Sandbox {
 		public static async void FixedUpdate() {
 			for (;;) {
 				await Task.Delay(50);
-				world.Update();
+				universe.Update();
 			}
 		}
 
 		static void OnReceive(ButtonMessage message) {
 			if (message.button == 0) {
-				var volume = world.volumes[0];
+				var volume = universe.volumes[0];
 				var chunk = volume.ChunkAt(message.blockPosition);
 				volume[message.blockPosition] = 0;
 			}
 		}
 
 		static void OnReceive(ConnectClientMessage message) {
-			foreach (var volume in world.volumes) {
+			foreach (var volume in universe.volumes) {
 				new VolumeMessage(volume.Key).Send(message.connection);
 				foreach (var chunk in volume.Value.chunks) {
 					new ChunkMessage(volume.Key, chunk).Send(message.connection);
@@ -65,7 +66,7 @@ namespace Sandbox {
 
 		static void OnReceive(PlaceBlockMessage message) {
 			if (any(message.blockPosition < 0) || any(message.blockPosition >= Volume.ChunkDistance * Chunk.Size)) { return; }
-			var volume = world.volumes[0];
+			var volume = universe.volumes[0];
 			var chunk = volume.ChunkAt(message.blockPosition);
 			volume[message.blockPosition] = message.id;
 		}

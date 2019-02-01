@@ -2,6 +2,7 @@ namespace Sandbox.Net {
 	using System;
 	using System.Collections.Generic;
 	using System.Text;
+	using Sandbox.Core;
 	using UnityEngine;
 
 	public abstract class Message {
