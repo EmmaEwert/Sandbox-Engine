@@ -26,7 +26,7 @@ namespace Sandbox {
 		}
 
 		public static Block Block(int id) {
-			return BlockState.blockStates[id].block;
+			return BlockState.blockStates[id]?.block;
 		}
 
 		public static Dictionary<string, BlockState> Load(string name) {

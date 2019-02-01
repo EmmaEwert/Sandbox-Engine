@@ -5,8 +5,8 @@ namespace Sandbox {
 
 	public static class Physics {
 		public static bool Intersects(Volume volume, Box box) {
-			box.min = -float3(volume.gameObject.transform.position) + box.min;
-			box.max = -float3(volume.gameObject.transform.position) + box.max;
+			box.min = -float3(volume.position) + box.min;
+			box.max = -float3(volume.position) + box.max;
 			var volumeBox = new Box {
 				min = floor(box.min) - 1,
 				max = ceil(box.max) + 1,
@@ -26,7 +26,7 @@ namespace Sandbox {
 
 		public static bool Intersects(Volume volume, Ray ray, out Hit hit, float maxDistance = Mathf.Infinity) {
 			// TODO: Optimise to only look for hits in the direction of the ray.
-			ray.origin = -float3(volume.gameObject.transform.position) + ray.origin;
+			ray.origin = -float3(volume.position) + ray.origin;
 			var volumeBox = new Box {
 				min = max(min(ray.origin, ray.origin + ray.direction * maxDistance) - 1, -float3(volume.gameObject.transform.position) - Volume.SimDistance),
 				max = min(max(ray.origin, ray.origin + ray.direction * maxDistance) + 1, -float3(volume.gameObject.transform.position) + Volume.SimDistance),

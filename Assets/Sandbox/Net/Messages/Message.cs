@@ -29,7 +29,7 @@ namespace Sandbox.Net {
 
 			var clientMessageCount = clientReceivedMessages.Count;
 			for (var i = 0; i < clientMessageCount; ++i) {
-				clientReceivedMessages[i].OnReceive(server: false);
+				clientReceivedMessages[i]?.OnReceive(server: false);
 			}
 			clientReceivedMessages.RemoveRange(0, clientMessageCount);
 		}

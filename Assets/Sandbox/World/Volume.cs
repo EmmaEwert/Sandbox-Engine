@@ -12,6 +12,7 @@ namespace Sandbox {
 		public ushort id;
 		public Chunk[,,] chunks = new Chunk[ChunkDistance, ChunkDistance, ChunkDistance];
 		public GameObject gameObject;
+		public float3 position;
 
 		public Volume() {
 			for (var z = 0; z < ChunkDistance; ++z)
@@ -19,6 +20,7 @@ namespace Sandbox {
 			for (var x = 0; x < ChunkDistance; ++x) {
 				chunks[x, y, z] = new Chunk(int3(x, y, z) * Chunk.Size, this);
 			}
+			position = new float3(1f) * -Volume.ChunkDistance * Chunk.Size / 2;
 		}
 
 		public ushort this[int3 pos] {

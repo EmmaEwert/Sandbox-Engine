@@ -6,6 +6,7 @@ namespace Sandbox {
 
 	public static class GameServer {
 		public static World world = new World();
+		public static bool running = false;
 
 		public static void Start(string playerName) {
 			Message.RegisterServerHandler<ButtonMessage>(OnReceive);
@@ -22,6 +23,8 @@ namespace Sandbox {
 			Benchmark.StartWatch("Client start");
 			GameClient.Start(Server.localIP.ToString(), playerName);
 			Benchmark.StopWatches("Start Game");
+
+			running = true;
 
 			FixedUpdate();
 		}

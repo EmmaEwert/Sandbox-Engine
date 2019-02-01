@@ -1,5 +1,6 @@
 ﻿namespace Sandbox.Net {
 	using System;
+	using System.Collections.Concurrent;
 	using System.Collections.Generic;
 	using System.Net;
 	using System.Net.Sockets;
@@ -7,14 +8,13 @@
 	using Unity.Jobs;
 	using Unity.Networking.Transport;
 	using UnityEngine;
-	using UnityEngine.Assertions;
 
 	public static class Server {
 		public static Dictionary<int, string> players = new Dictionary<int, string>();
 		public static NetworkConnection[] Connections = new NetworkConnection[0];
 		static NativeList<NetworkConnection> connections;
 		static BasicNetworkDriver<IPv4UDPSocket> driver;
-		static List<NativeArray<byte>> broadcasts = new List<NativeArray<byte>>();
+		static ConcurrentQueue<NativeArray<byte>> broadcasts = new ConcurrentQueue<NativeArray<byte>>();
 		static List<(int connection, NativeArray<byte> data)> messages = new List<(int, NativeArray<byte>)>();
 		static JobHandle receiveJobHandle;
 		static JobHandle[] sendJobHandles = new JobHandle[0];
@@ -59,9 +59,9 @@
 			messages.RemoveRange(0, sendJobHandles.Length);
 			for (var i = 0; i < broadcastJobHandles.Length; ++i) {
 				broadcastJobHandles[i].Complete();
-				broadcasts[i].Dispose();
+				//broadcasts[i].Dispose();
 			}
-			broadcasts.RemoveRange(0, broadcastJobHandles.Length);
+			//broadcasts.RemoveRange(0, broadcastJobHandles.Length);
 			driver.Dispose();
 			connections.Dispose();
 		}
@@ -77,9 +77,8 @@
 			messages.RemoveRange(0, sendJobHandles.Length);
 			for (var i = 0; i < broadcastJobHandles.Length; ++i) {
 				broadcastJobHandles[i].Complete();
-				broadcasts[i].Dispose();
+				//broadcasts[i].Dispose();
 			}
-			broadcasts.RemoveRange(0, broadcastJobHandles.Length);
 			Connections = connections.ToArray();
 
 			// Schedule new network connection and event reception
@@ -109,13 +108,17 @@
 
 			// Schedule broadcast queue sending
 			broadcastJobHandles = new JobHandle[broadcasts.Count];
-			for (var i = 0; i < broadcasts.Count; ++i) {
+			for (var i = 0; i < broadcastJobHandles.Length; ++i) {
+				broadcasts.TryDequeue(out var message);
 				receiveJobHandle = broadcastJobHandles[i] = new BroadcastJob {
 					driver = concurrentDriver,
 					connections = connections.AsDeferredJobArray(),
-					message = broadcasts[i]
+					message = message
 				}.Schedule(connections, 1, receiveJobHandle);
 			}
+			//broadcasts.RemoveRange(0, broadcastJobHandles.Length);
+
+			JobHandle.ScheduleBatchedJobs();
 
 			// Send pings
 			ping += Time.deltaTime;
@@ -127,7 +130,7 @@
 
 		internal static void Broadcast(byte[] bytes) {
 			var data = new NativeArray<byte>(bytes, Allocator.TempJob);
-			broadcasts.Add(data);
+			broadcasts.Enqueue(data);
 		}
 
 		internal static void Send(byte[] bytes, int connection) {
@@ -217,7 +220,7 @@
 		struct BroadcastJob : IJobParallelFor {
 			public BasicNetworkDriver<IPv4UDPSocket>.Concurrent driver;
 			[ReadOnly] public NativeArray<NetworkConnection> connections;
-			[ReadOnly] public NativeArray<byte> message;
+			[ReadOnly, DeallocateOnJobCompletion] public NativeArray<byte> message;
 
 			public void Execute(int index) {
 				using (var writer = new DataStreamWriter(message.Length, Allocator.Temp)) {

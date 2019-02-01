@@ -3,4 +3,3 @@ namespace Sandbox {
 		public Cobblestone() : base("cobblestone") { }
 	}
 }
-
