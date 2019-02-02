@@ -3,15 +3,14 @@ namespace Sandbox {
 	using Unity.Collections;
 	using Unity.Entities;
 	using Unity.Jobs;
-	using Unity.Transforms;
 
 	class GravitySystem : JobComponentSystem {
 		[BurstCompile]
 		[RequireSubtractiveComponent(typeof(Collision))]
-		struct GravityJob : IJobProcessComponentData<Position, Velocity, FallDown> {
-			public float Δt;
+		struct GravityJob : IJobProcessComponentData<Velocity, FallDown> {
+			[ReadOnly] public float Δt;
 
-			public void Execute(ref Position pos, ref Velocity vel, ref FallDown fallDown) {
+			public void Execute(ref Velocity vel, [ReadOnly] ref FallDown fallDown) {
 				if (fallDown.Grounded == 1) {
 					return;
 				}

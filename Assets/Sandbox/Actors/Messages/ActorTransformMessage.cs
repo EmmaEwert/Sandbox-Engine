@@ -7,7 +7,7 @@ namespace Sandbox {
 		public int type;
 		public float3 pos;
 
-		protected override int length => sizeof(int) + sizeof(float) * 3;
+		protected override int length => sizeof(int) * 2 + sizeof(float) * 3;
 
 		public ActorTransformMessage() { }
 		public ActorTransformMessage(int id, int type, float3 pos) {

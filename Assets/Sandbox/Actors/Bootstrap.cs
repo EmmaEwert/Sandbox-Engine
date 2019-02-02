@@ -2,7 +2,6 @@ namespace Sandbox {
 	using Unity.Entities;
 	using Unity.Transforms;
 	using UnityEngine;
-	using UnityEngine.Rendering;
 
 	public class Bootstrap {
 		public static EntityArchetype rabbitArchetype;
@@ -10,7 +9,6 @@ namespace Sandbox {
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
 		static void PreInitialize() {
 			var manager = Unity.Entities.World.Active.GetOrCreateManager<EntityManager>();
-
 			rabbitArchetype = manager.CreateArchetype(
 				typeof(ActorType),
 				typeof(Collider),
@@ -18,7 +16,6 @@ namespace Sandbox {
 				typeof(JumpForward),
 				typeof(Position),
 				typeof(RandomMove),
-				typeof(ServerSide),
 				typeof(Velocity)
 			);
 		}

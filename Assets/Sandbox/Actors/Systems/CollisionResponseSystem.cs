@@ -1,4 +1,5 @@
 namespace Sandbox {
+	using Unity.Burst;
 	using Unity.Collections;
 	using Unity.Entities;
 	using Unity.Jobs;
@@ -7,11 +8,12 @@ namespace Sandbox {
 
 	[UpdateAfter(typeof(GravitySystem))]
 	class CollisionResponseSystem : JobComponentSystem {
-		struct ResponseJob : IJobProcessComponentDataWithEntity<Position, Velocity, Collision> {
-			public float Δt;
+		[RequireComponentTag(typeof(Collision))]
+		struct ResponseJob : IJobProcessComponentDataWithEntity<Position, Velocity> {
+			[ReadOnly] public float Δt;
 			[NativeDisableParallelForRestriction] public EntityCommandBuffer queue;
 
-			public void Execute(Entity entity, int index, ref Position pos, ref Velocity vel, ref Collision collision) {
+			public void Execute([ReadOnly] Entity entity, [ReadOnly] int index, ref Position pos, ref Velocity vel) {
 				pos.Value -= vel.Value * Δt;
 				pos.Value.y = math.round(pos.Value.y + 0.75f) - 0.75f;
 				vel.Value = new float3(0);

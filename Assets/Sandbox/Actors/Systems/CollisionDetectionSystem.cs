@@ -1,5 +1,6 @@
 ﻿namespace Sandbox {
 	using Sandbox.Core;
+	using Unity.Burst;
 	using Unity.Collections;
 	using Unity.Entities;
 	using Unity.Jobs;
@@ -7,13 +8,14 @@
 	using Unity.Transforms;
 
 	class CollisionDetectionSystem : JobComponentSystem {
+		[RequireComponentTag(typeof(Collider))]
 		[RequireSubtractiveComponent(typeof(Collision))]
-		struct CollisionJob : IJobProcessComponentDataWithEntity<Collider, Position, Velocity> {
+		struct DetectionJob : IJobProcessComponentDataWithEntity<Position, Velocity> {
 			[ReadOnly] public float Δt;
 			[ReadOnly] public ushort volumeID;
 			[NativeDisableParallelForRestriction] public EntityCommandBuffer queue;
 
-			public void Execute(Entity entity, int index, ref Collider collider, ref Position pos, ref Velocity vel) {
+			public void Execute([ReadOnly] Entity entity, [ReadOnly] int index, [ReadOnly] ref Position pos, [ReadOnly] ref Velocity vel) {
 				var box = new Box {
 					min = pos.Value - new float3(0.25f) + vel.Value * Δt,
 					max = pos.Value + new float3(0.25f) + vel.Value * Δt
@@ -30,7 +32,7 @@
 #pragma warning restore 649
 
 		protected override JobHandle OnUpdate(JobHandle dependencies) {
-			return new CollisionJob {
+			return new DetectionJob {
 				Δt = UnityEngine.Time.deltaTime,
 				volumeID = 0,
 				queue = barrier.CreateCommandBuffer()

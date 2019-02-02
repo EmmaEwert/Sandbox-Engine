@@ -14,7 +14,7 @@
 		[BurstCompile]
 		[RequireComponentTag(typeof(JumpForward))]
 		struct RandomJumpJob : IJobProcessComponentData<RandomMove, Position, Velocity, FallDown> {
-			public float Δt;
+			[ReadOnly] public float Δt;
 			public Random random;
 
 			public void Execute(ref RandomMove randomMove, [ReadOnly] ref Position pos, ref Velocity vel, ref FallDown fallDown) {
