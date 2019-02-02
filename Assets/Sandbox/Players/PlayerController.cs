@@ -41,6 +41,8 @@
 				blockID = BlockManager.Default("stone").id;
 			} else if (Input.GetKeyDown(KeyCode.Alpha4)) {
 				blockID = BlockManager.Default("dirt").id;
+			} else if (Input.GetKeyDown(KeyCode.Alpha5)) {
+				blockID = BlockManager.Default("lever").id;
 			}
 			GameObject.Find("Selected Block").GetComponent<Text>().text =
 				BlockManager.Block(blockID).GetType().Name;
