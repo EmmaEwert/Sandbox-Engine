@@ -87,15 +87,20 @@
 			var ray = new Core.Ray(camera.position, camera.forward);
 			if (Core.Physics.Intersects(volume, ray, out var hit, maxDistance: 5)) {
 				lineBox.position = float3(volume.gameObject.transform.position) + float3(hit.position);
+				var block = BlockManager.Block(volume[hit.position]);
 				if (Input.GetButtonDown("Fire1")) {
-					new ButtonMessage(0, hit.position).Send();
+					block.On(new Pull(), volume, hit.position);
 				}
 				if (Input.GetButtonDown("Fire2")) {
-					new PlaceBlockMessage(hit.position + int3(hit.normal), blockID).Send();
+					block.On(new Push { blockID = blockID, normal = new int3(hit.normal) }, volume, hit.position);
+				}
+				if (Input.GetKeyDown(KeyCode.E)) {
+					block.On(new Interact(), volume, hit.position);
 				}
 			} else {
 				lineBox.position = float3(0, 0, -1000);
 			}
+
 
 			if (any(velocity != 0) || any(float3(movement) != 0) || any(float2(aim) != 0)) {
 				new TransformMessage(transform.position, pivot.rotation).Send();
