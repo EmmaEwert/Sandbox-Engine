@@ -72,6 +72,8 @@ namespace Sandbox.Core {
 			foreach (var element in this.elements) {
 				var from = element.from / 16f;
 				var to = element.to / 16f;
+				var rotation = element.rotation;
+				rotation.origin /= 16f;
 				foreach (var face in element.faces) {
 					var uv = face.Value.uv / 16f;
 					var useUV = any(uv != default(float4));
@@ -79,78 +81,78 @@ namespace Sandbox.Core {
 					var uvs = new float2[4];
 					var normal = default(float3);
 					var triangles = new int[6];
-					var uvOffset = TextureManager.Offset(face.Value.texture);
-					var rot = face.Value.rotation;
+					var offsetUV = TextureManager.Offset(face.Value.texture);
+					var rotUV = face.Value.rotation;
 					switch (face.Key) {
 						case "down":
-							positions[0] = float3(from.x, from.y, to.z);
-							positions[1] = float3(to.x, from.y, from.z);
-							positions[2] = float3(to.x, from.y, to.z);
-							positions[3] = float3(from.x, from.y, from.z);
-							uvs[rot == 90 ? 1 : rot == 180 ? 0 : rot == 270 ? 1 : 0] = (useUV ? uv.xy : float2(from.x, from.z)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 0 : rot == 180 ? 1 : rot == 270 ? 0 : 1] = (useUV ? uv.zw : float2(to.x, to.z)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 2 : rot == 180 ? 3 : rot == 270 ? 3 : 2] = (useUV ? uv.zy : float2(to.x, from.z)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 3 : rot == 180 ? 2 : rot == 270 ? 2 : 3] = (useUV ? uv.xw : float2(from.x, to.z)) / TextureManager.texels + uvOffset;
+							positions[0] = Math.RotateAroundPivot(float3(from.x, from.y, to.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[1] = Math.RotateAroundPivot(float3(to.x, from.y, from.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[2] = Math.RotateAroundPivot(float3(to.x, from.y, to.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[3] = Math.RotateAroundPivot(float3(from.x, from.y, from.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							uvs[rotUV == 90 ? 1 : rotUV == 180 ? 0 : rotUV == 270 ? 1 : 0] = (useUV ? uv.xy : float2(from.x, from.z)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 0 : rotUV == 180 ? 1 : rotUV == 270 ? 0 : 1] = (useUV ? uv.zw : float2(to.x, to.z)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 2 : rotUV == 180 ? 3 : rotUV == 270 ? 3 : 2] = (useUV ? uv.zy : float2(to.x, from.z)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 3 : rotUV == 180 ? 2 : rotUV == 270 ? 2 : 3] = (useUV ? uv.xw : float2(from.x, to.z)) / TextureManager.texels + offsetUV;
 							normal = float3(0, -1, 0);
 							triangles = new [] { 0, 1, 2, 0, 3, 1 };
 							break;
 						case "up":
-							positions[0] = float3(from.x, to.y, from.z);
-							positions[1] = float3(to.x, to.y, to.z);
-							positions[2] = float3(to.x, to.y, from.z);
-							positions[3] = float3(from.x, to.y, to.z);
-							uvs[rot == 90 ? 1 : rot == 180 ? 0 : rot == 270 ? 1 : 0] = (useUV ? uv.xy : float2(from.x, from.z)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 0 : rot == 180 ? 1 : rot == 270 ? 0 : 1] = (useUV ? uv.zw : float2(to.x, to.z)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 2 : rot == 180 ? 3 : rot == 270 ? 3 : 2] = (useUV ? uv.zy : float2(to.x, from.z)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 3 : rot == 180 ? 2 : rot == 270 ? 2 : 3] = (useUV ? uv.xw : float2(from.x, to.z)) / TextureManager.texels + uvOffset;
+							positions[0] = Math.RotateAroundPivot(float3(from.x, to.y, from.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[1] = Math.RotateAroundPivot(float3(to.x, to.y, to.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[2] = Math.RotateAroundPivot(float3(to.x, to.y, from.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[3] = Math.RotateAroundPivot(float3(from.x, to.y, to.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							uvs[rotUV == 90 ? 1 : rotUV == 180 ? 0 : rotUV == 270 ? 1 : 0] = (useUV ? uv.xy : float2(from.x, from.z)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 0 : rotUV == 180 ? 1 : rotUV == 270 ? 0 : 1] = (useUV ? uv.zw : float2(to.x, to.z)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 2 : rotUV == 180 ? 3 : rotUV == 270 ? 3 : 2] = (useUV ? uv.zy : float2(to.x, from.z)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 3 : rotUV == 180 ? 2 : rotUV == 270 ? 2 : 3] = (useUV ? uv.xw : float2(from.x, to.z)) / TextureManager.texels + offsetUV;
 							normal = float3(0, 1, 0);
 							triangles = new [] { 0, 1, 2, 0, 3, 1 };
 							break;
 						case "north":
-							positions[0] = float3(from.x, from.y, from.z);
-							positions[1] = float3(to.x, to.y, from.z);
-							positions[2] = float3(to.x, from.y, from.z);
-							positions[3] = float3(from.x, to.y, from.z);
-							uvs[rot == 90 ? 1 : rot == 180 ? 1 : rot == 270 ? 3 : 0] = (useUV ? uv.xy : float2(from.x, from.y)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 0 : rot == 180 ? 0 : rot == 270 ? 2 : 1] = (useUV ? uv.zw : float2(to.x, to.y)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 2 : rot == 180 ? 3 : rot == 270 ? 1 : 2] = (useUV ? uv.zy : float2(to.x, from.y)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 3 : rot == 180 ? 2 : rot == 270 ? 0 : 3] = (useUV ? uv.xw : float2(from.x, to.y)) / TextureManager.texels + uvOffset;
+							positions[0] = Math.RotateAroundPivot(float3(from.x, from.y, from.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[1] = Math.RotateAroundPivot(float3(to.x, to.y, from.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[2] = Math.RotateAroundPivot(float3(to.x, from.y, from.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[3] = Math.RotateAroundPivot(float3(from.x, to.y, from.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							uvs[rotUV == 90 ? 1 : rotUV == 180 ? 1 : rotUV == 270 ? 3 : 0] = (useUV ? uv.xy : float2(from.x, from.y)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 0 : rotUV == 180 ? 0 : rotUV == 270 ? 2 : 1] = (useUV ? uv.zw : float2(to.x, to.y)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 2 : rotUV == 180 ? 3 : rotUV == 270 ? 1 : 2] = (useUV ? uv.zy : float2(to.x, from.y)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 3 : rotUV == 180 ? 2 : rotUV == 270 ? 0 : 3] = (useUV ? uv.xw : float2(from.x, to.y)) / TextureManager.texels + offsetUV;
 							normal = float3(0, 0, -1);
 							triangles = new [] { 0, 1, 2, 0, 3, 1 };
 							break;
 						case "south":
-							positions[0] = float3(from.x, from.y, to.z);
-							positions[1] = float3(from.x, to.y, to.z);
-							positions[2] = float3(to.x, from.y, to.z);
-							positions[3] = float3(to.x, to.y, to.z);
-							uvs[rot == 90 ? 1 : rot == 180 ? 0 : rot == 270 ? 1 : 0] = (useUV ? uv.xy : float2(from.x, from.y)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 0 : rot == 180 ? 1 : rot == 270 ? 0 : 1] = (useUV ? uv.xw : float2(from.x, to.y)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 2 : rot == 180 ? 3 : rot == 270 ? 3 : 2] = (useUV ? uv.zy : float2(to.x, from.y)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 3 : rot == 180 ? 2 : rot == 270 ? 2 : 3] = (useUV ? uv.zw : float2(to.x, to.y)) / TextureManager.texels + uvOffset;
+							positions[0] = Math.RotateAroundPivot(float3(from.x, from.y, to.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[1] = Math.RotateAroundPivot(float3(from.x, to.y, to.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[2] = Math.RotateAroundPivot(float3(to.x, from.y, to.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[3] = Math.RotateAroundPivot(float3(to.x, to.y, to.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							uvs[rotUV == 90 ? 1 : rotUV == 180 ? 0 : rotUV == 270 ? 1 : 0] = (useUV ? uv.xy : float2(from.x, from.y)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 0 : rotUV == 180 ? 1 : rotUV == 270 ? 0 : 1] = (useUV ? uv.xw : float2(from.x, to.y)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 2 : rotUV == 180 ? 3 : rotUV == 270 ? 3 : 2] = (useUV ? uv.zy : float2(to.x, from.y)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 3 : rotUV == 180 ? 2 : rotUV == 270 ? 2 : 3] = (useUV ? uv.zw : float2(to.x, to.y)) / TextureManager.texels + offsetUV;
 							normal = float3(0, 0, 1);
 							triangles = new [] { 0, 2, 3, 0, 3, 1 };
 							break;
 						case "west":
-							positions[0] = float3(from.x, from.y, from.z);
-							positions[1] = float3(from.x, to.y, to.z);
-							positions[2] = float3(from.x, to.y, from.z);
-							positions[3] = float3(from.x, from.y, to.z);
-							uvs[rot == 90 ? 1 : rot == 180 ? 0 : rot == 270 ? 0 : 0] = (useUV ? uv.xy : float2(from.z, from.y)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 0 : rot == 180 ? 1 : rot == 270 ? 1 : 1] = (useUV ? uv.zw : float2(to.z, to.y)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 2 : rot == 180 ? 3 : rot == 270 ? 3 : 2] = (useUV ? uv.xw : float2(from.z, to.y)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 3 : rot == 180 ? 2 : rot == 270 ? 2 : 3] = (useUV ? uv.zy : float2(to.z, from.y)) / TextureManager.texels + uvOffset;
+							positions[0] = Math.RotateAroundPivot(float3(from.x, from.y, from.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[1] = Math.RotateAroundPivot(float3(from.x, to.y, to.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[2] = Math.RotateAroundPivot(float3(from.x, to.y, from.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[3] = Math.RotateAroundPivot(float3(from.x, from.y, to.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							uvs[rotUV == 90 ? 1 : rotUV == 180 ? 0 : rotUV == 270 ? 0 : 0] = (useUV ? uv.xy : float2(from.z, from.y)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 0 : rotUV == 180 ? 1 : rotUV == 270 ? 1 : 1] = (useUV ? uv.zw : float2(to.z, to.y)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 2 : rotUV == 180 ? 3 : rotUV == 270 ? 3 : 2] = (useUV ? uv.xw : float2(from.z, to.y)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 3 : rotUV == 180 ? 2 : rotUV == 270 ? 2 : 3] = (useUV ? uv.zy : float2(to.z, from.y)) / TextureManager.texels + offsetUV;
 							normal = float3(-1, 0, 0);
 							triangles = new [] { 0, 1, 2, 0, 3, 1 };
 							break;
 						case "east":
-							positions[0] = float3(to.x, from.y, to.z);
-							positions[1] = float3(to.x, to.y, from.z);
-							positions[2] = float3(to.x, to.y, to.z);
-							positions[3] = float3(to.x, from.y, from.z);
-							uvs[rot == 90 ? 1 : rot == 180 ? 0 : rot == 270 ? 1 : 0] = (useUV ? uv.xy : float2(from.z, from.y)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 0 : rot == 180 ? 1 : rot == 270 ? 0 : 1] = (useUV ? uv.zw : float2(to.z, to.y)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 2 : rot == 180 ? 3 : rot == 270 ? 3 : 2] = (useUV ? uv.xw : float2(from.z, to.y)) / TextureManager.texels + uvOffset;
-							uvs[rot == 90 ? 3 : rot == 180 ? 2 : rot == 270 ? 2 : 3] = (useUV ? uv.zy : float2(to.z, from.y)) / TextureManager.texels + uvOffset;
+							positions[0] = Math.RotateAroundPivot(float3(to.x, from.y, to.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[1] = Math.RotateAroundPivot(float3(to.x, to.y, from.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[2] = Math.RotateAroundPivot(float3(to.x, to.y, to.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							positions[3] = Math.RotateAroundPivot(float3(to.x, from.y, from.z), rotation.origin, new float3(rotation.axis == "x" ? rotation.angle : 0, rotation.axis == "y" ? rotation.angle : 0, rotation.axis == "z" ? rotation.angle : 0));
+							uvs[rotUV == 90 ? 1 : rotUV == 180 ? 0 : rotUV == 270 ? 1 : 0] = (useUV ? uv.xy : float2(from.z, from.y)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 0 : rotUV == 180 ? 1 : rotUV == 270 ? 0 : 1] = (useUV ? uv.zw : float2(to.z, to.y)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 2 : rotUV == 180 ? 3 : rotUV == 270 ? 3 : 2] = (useUV ? uv.xw : float2(from.z, to.y)) / TextureManager.texels + offsetUV;
+							uvs[rotUV == 90 ? 3 : rotUV == 180 ? 2 : rotUV == 270 ? 2 : 3] = (useUV ? uv.zy : float2(to.z, from.y)) / TextureManager.texels + offsetUV;
 							normal = float3(1, 0, 0);
 							triangles = new [] { 0, 1, 2, 0, 3, 1 };
 							break;
@@ -178,6 +180,7 @@ namespace Sandbox.Core {
 		public class Element {
 			public float3 from;
 			public float3 to;
+			public Rotation rotation;
 			public Dictionary<string, Face> faces = new Dictionary<string, Face>();
 
 			public Element(JToken element) {
@@ -185,6 +188,17 @@ namespace Sandbox.Core {
 				this.from = new float3((float)from[0], (float)from[1], (float)from[2]);
 				var to = element["to"];
 				this.to = new float3((float)to[0], (float)to[1], (float)to[2]);
+				var rotation = element["rotation"];
+				if (rotation != null) {
+					var origin = (JArray)rotation["origin"];
+					this.rotation = new Rotation {
+						origin = new float3((float)origin[0], (float)origin[1], (float)origin[2]),
+						axis = (string)rotation["axis"],
+						angle = (float)rotation["angle"]
+					};
+				} else {
+					this.rotation = new Rotation { axis = "x" };
+				}
 				var faces = (JObject)element["faces"];
 				foreach (var face in faces) {
 					this.faces[face.Key] = new Face(face.Value);
@@ -194,9 +208,16 @@ namespace Sandbox.Core {
 			public Element(Element element) {
 				from = element.from;
 				to = element.to;
+				rotation = element.rotation;
 				foreach (var face in element.faces) {
 					faces[face.Key] = new Face(face.Value);
 				}
+			}
+
+			public class Rotation {
+				public float3 origin;
+				public string axis;
+				public float angle;
 			}
 
 			public class Face {
