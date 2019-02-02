@@ -28,7 +28,9 @@ namespace Sandbox {
 		public float3 Normal;
 	}
 
-	public struct Collider : IComponentData {
-		
+	public struct Collider : IComponentData { }
+
+	public struct RabbitSpawner : IComponentData {
+		public float Cooldown;
 	}
 }

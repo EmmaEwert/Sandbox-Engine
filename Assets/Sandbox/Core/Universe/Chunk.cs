@@ -3,6 +3,7 @@ namespace Sandbox.Core {
 	using System.Collections.Generic;
 	using Unity.Burst;
 	using Unity.Collections;
+	using Unity.Entities;
 	using Unity.Jobs;
 	using Unity.Mathematics;
 	using UnityEngine;
@@ -20,6 +21,7 @@ namespace Sandbox.Core {
 		NativeArray<ushort> generatedIDs;
 		Flag[] flags = new Flag[Size * Size * Size];
 		Volume volume;
+		Dictionary<int3, Entity> entities = new Dictionary<int3, Entity>();
 
 		public Chunk(int3 pos, Volume volume) {
 			this.pos = pos;
@@ -39,6 +41,17 @@ namespace Sandbox.Core {
 				nextIDs[index] = value;
 				flags[dot(PosToBlockIndex, pos)] |= Flag.Updated;
 				dirty = true;
+				if (value != 0 && BlockManager.Block(value) != BlockManager.Block(ids[index])) {
+					var manager = World.Active.GetOrCreateManager<EntityManager>();
+					if (entities.TryGetValue(pos, out var entity)) {
+						manager.DestroyEntity(entity);
+						entities.Remove(pos);
+					}
+					entity = BlockManager.Block(value).CreateEntity(volume, pos + this.pos);
+					if (entity != Entity.Null) {
+						entities[pos] = entity;
+					}
+				}
 			}
 		}
 

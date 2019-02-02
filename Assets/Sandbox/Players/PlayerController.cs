@@ -86,7 +86,9 @@
 			// Looking
 			var ray = new Core.Ray(camera.position, camera.forward);
 			if (Core.Physics.Intersects(volume, ray, out var hit, maxDistance: 5)) {
-				lineBox.position = float3(volume.gameObject.transform.position) + float3(hit.position);
+				var box = BlockManager.Block(volume[hit.position]).Box(volume, hit.position);
+				lineBox.position = float3(volume.gameObject.transform.position) + box.min;
+				lineBox.localScale = box.max - box.min;
 				var block = BlockManager.Block(volume[hit.position]);
 				if (Input.GetButtonDown("Fire1")) {
 					block.On(new Pull(), volume, hit.position);

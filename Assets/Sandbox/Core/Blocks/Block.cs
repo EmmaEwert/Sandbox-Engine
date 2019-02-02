@@ -1,6 +1,7 @@
 namespace Sandbox.Core {
 	using System;
 	using System.Collections.Generic;
+	using Unity.Entities;
 	using Unity.Mathematics;
 
 	public abstract class Block {
@@ -24,6 +25,9 @@ namespace Sandbox.Core {
 		///<summary>Collision and interaction box</summary>
 		public virtual Box Box(Volume volume, int3 pos) =>
 			new Box { min = pos, max = pos + 1 };
+		
+		///<summary>Called on the server whenever an instance of this block is first created.</summary>
+		public virtual Entity CreateEntity(Volume volume, int3 pos) => Entity.Null;
 		
 		///<summary>Called on the server when the block changes, or one of its neighbors change.</summary>
 		public virtual void OnUpdated(Volume volume, int3 pos) { }
