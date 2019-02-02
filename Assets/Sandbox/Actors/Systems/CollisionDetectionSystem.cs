@@ -11,7 +11,7 @@
 		struct CollisionJob : IJobProcessComponentDataWithEntity<Collider, Position, Velocity> {
 			[ReadOnly] public float Δt;
 			[ReadOnly] public ushort volumeID;
-			[NativeDisableParallelForRestriction] public EntityCommandBuffer commands;
+			[NativeDisableParallelForRestriction] public EntityCommandBuffer queue;
 
 			public void Execute(Entity entity, int index, ref Collider collider, ref Position pos, ref Velocity vel) {
 				var box = new Box {
@@ -20,7 +20,7 @@
 				};
 				var volume = Server.universe.volumes[volumeID];
 				if (Physics.Intersects(volume, box)) {
-					commands.AddComponent(entity, new Collision { });
+					queue.AddComponent(entity, new Collision { });
 				}
 			}
 		}
@@ -33,7 +33,7 @@
 			return new CollisionJob {
 				Δt = UnityEngine.Time.deltaTime,
 				volumeID = 0,
-				commands = barrier.CreateCommandBuffer()
+				queue = barrier.CreateCommandBuffer()
 			}.Schedule(this, dependencies);
 		}
 	}

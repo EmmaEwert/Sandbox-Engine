@@ -11,16 +11,16 @@ namespace Sandbox {
 
 		struct SpawnRabbitJob : IJobProcessComponentData<Position, RabbitSpawner> {
 			[ReadOnly] public float Δt;
-			[NativeDisableParallelForRestriction] public EntityCommandBuffer commands;
+			[NativeDisableParallelForRestriction] public EntityCommandBuffer queue;
 
 			public void Execute([ReadOnly] ref Position pos, ref RabbitSpawner spawner) {
 				spawner.Cooldown -= Δt;
 				if (spawner.Cooldown < 0f) {
 					spawner.Cooldown = 10f;
-					var entity = commands.CreateEntity(Bootstrap.rabbitArchetype);
-					commands.SetComponent(entity, new ActorType { Value = Actor.Type.Rabbit });
-					commands.SetComponent(entity, new Position { Value = pos.Value + new int3(0, 3, 0) });
-					commands.SetComponent(entity, new RandomMove { State = random.NextUInt() });
+					queue.CreateEntity(Bootstrap.rabbitArchetype);
+					queue.SetComponent(new ActorType { Value = Actor.Type.Rabbit });
+					queue.SetComponent(new Position { Value = pos.Value + new int3(0, 3, 0) });
+					queue.SetComponent(new RandomMove { State = random.NextUInt() });
 				}
 			}
 		}
@@ -34,7 +34,7 @@ namespace Sandbox {
 
 			return new SpawnRabbitJob {
 				Δt = UnityEngine.Time.deltaTime,
-				commands = barrier.CreateCommandBuffer()
+				queue = barrier.CreateCommandBuffer()
 			}.Schedule(this, dependencies);
 		}
 	}

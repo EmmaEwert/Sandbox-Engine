@@ -9,13 +9,13 @@ namespace Sandbox {
 	class CollisionResponseSystem : JobComponentSystem {
 		struct ResponseJob : IJobProcessComponentDataWithEntity<Position, Velocity, Collision> {
 			public float Δt;
-			[NativeDisableParallelForRestriction] public EntityCommandBuffer commands;
+			[NativeDisableParallelForRestriction] public EntityCommandBuffer queue;
 
 			public void Execute(Entity entity, int index, ref Position pos, ref Velocity vel, ref Collision collision) {
 				pos.Value -= vel.Value * Δt;
 				pos.Value.y = math.round(pos.Value.y + 0.75f) - 0.75f;
 				vel.Value = new float3(0);
-				commands.RemoveComponent<Collision>(entity);
+				queue.RemoveComponent<Collision>(entity);
 			}
 		}
 
@@ -26,7 +26,7 @@ namespace Sandbox {
 		protected override JobHandle OnUpdate(JobHandle dependencies) {
 			return new ResponseJob {
 				Δt = UnityEngine.Time.deltaTime,
-				commands = barrier.CreateCommandBuffer()
+				queue = barrier.CreateCommandBuffer()
 			}.Schedule(this, dependencies);
 		}
 	}
