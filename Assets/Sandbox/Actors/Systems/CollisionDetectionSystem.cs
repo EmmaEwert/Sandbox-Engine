@@ -18,10 +18,8 @@
 					min = pos.Value - new float3(0.5f) + vel.Value * Δt,
 					max = pos.Value + new float3(0.5f) + vel.Value * Δt
 				};
-				var volume = GameServer.universe.volumes[volumeID];
+				var volume = Server.universe.volumes[volumeID];
 				if (Physics.Intersects(volume, box)) {
-					//var manager = Unity.Entities.World.Active.GetOrCreateManager<EntityManager>();
-					//manager.AddComponent(entity, typeof(Collision));
 					commands.AddComponent(entity, new Collision { });
 				}
 			}

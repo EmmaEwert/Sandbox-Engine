@@ -30,7 +30,7 @@
 		}
 
 		void Update() {
-			var volume = GameClient.universe.volumes[0];
+			var volume = Client.universe.volumes[0];
 
 			// Block selection
 			if (Input.GetKeyDown(KeyCode.Alpha1)) {

@@ -7,8 +7,8 @@ namespace Sandbox.Core {
 		public Dictionary<ushort, Volume> volumes = new Dictionary<ushort, Volume>();
 		static Queue<Chunk> dirtyChunks = new Queue<Chunk>();
 		
-		public static void OnReceive(VolumeMessage message) {
-			var volume = GameClient.universe.volumes[message.id] = new Volume();
+		public void OnReceive(VolumeMessage message) {
+			var volume = volumes[message.id] = new Volume();
 			volume.id = message.id;
 			volume.gameObject = new GameObject("Volume");
 			volume.gameObject.transform.position = Vector3.one * -Volume.ChunkDistance * Chunk.Size / 2;
@@ -20,14 +20,12 @@ namespace Sandbox.Core {
 			}
 		}
 
-		public static void OnReceive(ChunkMessage message) {
-			//Benchmark.Benchmark.StartWatch("Update geometry");
-			var volume = GameClient.universe.volumes[message.volumeID];
+		public void OnReceive(ChunkMessage message) {
+			var volume = volumes[message.volumeID];
 			var pos = message.pos;
 			var chunk = volume.ChunkAt(pos);
 			chunk.IDs(message.ids);
 			chunk.UpdateGeometry(volume);
-			//Benchmark.Benchmark.StopWatches("ChunkMessage");
 		}
 
 		public void Update() {

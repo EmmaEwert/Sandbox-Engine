@@ -1,4 +1,5 @@
 namespace Sandbox {
+	using Sandbox.Core;
 	using Unity.Entities;
 	using Unity.Mathematics;
 	using Unity.Transforms;
@@ -8,7 +9,7 @@ namespace Sandbox {
 		static Random random = new Random(1);
 
 		protected override void OnUpdate() {
-			if (!GameServer.running) { return; }
+			if (!Server.running) { return; }
 
 			cooldown -= UnityEngine.Time.deltaTime;
 			if (cooldown < 0f) {
