@@ -5,6 +5,8 @@ namespace Sandbox {
 	using Unity.Transforms;
 
 	public class Spawner : Block {
+		public override bool opaqueCube => false;
+
 		public Spawner() : base("spawner") { }
 
 		public override Entity CreateEntity(Volume volume, int3 pos) {

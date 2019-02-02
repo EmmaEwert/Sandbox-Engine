@@ -15,8 +15,8 @@
 
 			public void Execute(Entity entity, int index, ref Collider collider, ref Position pos, ref Velocity vel) {
 				var box = new Box {
-					min = pos.Value - new float3(0.5f) + vel.Value * Δt,
-					max = pos.Value + new float3(0.5f) + vel.Value * Δt
+					min = pos.Value - new float3(0.25f) + vel.Value * Δt,
+					max = pos.Value + new float3(0.25f) + vel.Value * Δt
 				};
 				var volume = Server.universe.volumes[volumeID];
 				if (Physics.Intersects(volume, box)) {

@@ -6,8 +6,8 @@
 	using Unity.Mathematics;
 	using Unity.Transforms;
 
-	[UpdateBefore(typeof(MoveSystem))]
 	[UpdateAfter(typeof(GravitySystem))]
+	[UpdateBefore(typeof(MoveSystem))]
 	class RandomJumpSystem : JobComponentSystem {
 		static Random random = new Random(1);
 

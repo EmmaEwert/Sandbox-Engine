@@ -13,7 +13,7 @@ namespace Sandbox {
 
 			public void Execute(Entity entity, int index, ref Position pos, ref Velocity vel, ref Collision collision) {
 				pos.Value -= vel.Value * Δt;
-				pos.Value.y = math.round(pos.Value.y + 0.5f) - 0.5f;
+				pos.Value.y = math.round(pos.Value.y + 0.75f) - 0.75f;
 				vel.Value = new float3(0);
 				commands.RemoveComponent<Collision>(entity);
 			}

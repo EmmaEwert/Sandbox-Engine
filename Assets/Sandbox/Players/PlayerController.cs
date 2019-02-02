@@ -14,9 +14,18 @@
 		float3 velocity;
 		ushort blockID;
 
+		void PlaceOrRemoveBlock(Block.Verb verb, Volume volume, int3 pos) {
+			if (verb is Push push) {
+				new PlaceBlockMessage(pos + push.normal, push.blockID).Send();
+			} else if (verb is Pull) {
+				new PlaceBlockMessage(pos, 0).Send();
+			}
+		}
+
 		void Awake() {
 			instance = this;
 			blockID = BlockManager.Default("sand").id;
+			Block.onDefault = PlaceOrRemoveBlock;
 		}
 
 		void OnEnable() {

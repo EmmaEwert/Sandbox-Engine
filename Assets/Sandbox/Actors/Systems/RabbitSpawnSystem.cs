@@ -25,7 +25,9 @@ namespace Sandbox {
 			}
 		}
 
+#pragma warning disable 649
 		[Inject] EndFrameBarrier barrier;
+#pragma warning restore 649
 
 		protected override JobHandle OnUpdate(JobHandle dependencies) {
 			if (!Server.running) { return dependencies; }
