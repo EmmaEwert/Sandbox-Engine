@@ -1,6 +1,5 @@
 namespace Sandbox {
 	using Unity.Entities;
-	using Unity.Rendering;
 	using Unity.Transforms;
 	using UnityEngine;
 	using UnityEngine.Rendering;
@@ -22,11 +21,6 @@ namespace Sandbox {
 				typeof(ServerSide),
 				typeof(Velocity)
 			);
-		}
-
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-		static void Initialize() {
-			var manager = Unity.Entities.World.Active.GetOrCreateManager<EntityManager>();
 		}
 	}
 }
