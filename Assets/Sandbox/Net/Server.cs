@@ -12,6 +12,7 @@
 	public static class Server {
 		public static Dictionary<int, string> players = new Dictionary<int, string>();
 		public static NetworkConnection[] Connections = new NetworkConnection[0];
+		internal static List<Message> receivedMessages = new List<Message>();
 		static NativeList<NetworkConnection> connections;
 		static BasicNetworkDriver<IPv4UDPSocket> driver;
 		static ConcurrentQueue<NativeArray<byte>> broadcasts = new ConcurrentQueue<NativeArray<byte>>();
@@ -20,6 +21,7 @@
 		static JobHandle[] sendJobHandles = new JobHandle[0];
 		static JobHandle[] broadcastJobHandles = new JobHandle[0];
 		static float ping;
+		static Dictionary<System.Type, Action<Message>> handlers = new Dictionary<Type, Action<Message>>();
 
 		public static IPAddress localIP {
 			get {
@@ -30,6 +32,14 @@
 					}
 				}
 				return IPAddress.Loopback;
+			}
+		}
+
+		public static void Listen<T>(Action<T> handler) where T : Message {
+			if (Server.handlers.TryGetValue(typeof(T), out var handlers)) {
+				Server.handlers[typeof(T)] = handlers + new Action<Message>(o => handler((T)o));
+			} else {
+				Server.handlers[typeof(T)] = new Action<Message>(o => handler((T)o));
 			}
 		}
 
@@ -44,9 +54,8 @@
 				ChatManager.Add($"S: Listening on {endpoint.Address}:{endpoint.Port}…");
 			}
 			connections = new NativeList<NetworkConnection>(16, Allocator.Persistent);
-			Message.RegisterServerHandler<ConnectClientMessage>(OnReceive);
-			Message.RegisterServerHandler<PingMessage>(OnReceive);
-
+			Listen<ConnectClientMessage>(SendPlayerState);
+			Listen<PingMessage>(_ => {});
 		}
 
 		///<summary>Clean up server handles.</summary>
@@ -77,9 +86,16 @@
 			messages.RemoveRange(0, sendJobHandles.Length);
 			for (var i = 0; i < broadcastJobHandles.Length; ++i) {
 				broadcastJobHandles[i].Complete();
-				//broadcasts[i].Dispose();
 			}
 			Connections = connections.ToArray();
+
+			// Process received messages
+			var messageCount = receivedMessages.Count;
+			for (var i = 0; i < messageCount; ++i) {
+				OnReceive(receivedMessages[i]);
+			}
+			receivedMessages.RemoveRange(0, messageCount);
+
 
 			// Schedule new network connection and event reception
 			var concurrentDriver = driver.ToConcurrent();
@@ -139,7 +155,7 @@
 			//list.Add(data);
 		}
 
-		static void OnReceive(ConnectClientMessage message) {
+		static void SendPlayerState(ConnectClientMessage message) {
 			players.Add(message.connection, message.name);
 			new ConnectServerMessage(message.connection).Send(message.connection);
 			new JoinMessage(message.connection, message.name).Broadcast();
@@ -150,7 +166,13 @@
 			}
 		}
 
-		static void OnReceive(PingMessage message) { }
+		static void OnReceive(Message message) {
+			if (handlers.TryGetValue(message.GetType(), out var handler)) {
+				handler(message);
+			} else {
+				Debug.Log($"No server handlers for {message.GetType()}, ignoring…");
+			}
+		}
 		
 		static void Receive(Reader reader, int connection) {
 			reader.Read(out ushort typeIndex);

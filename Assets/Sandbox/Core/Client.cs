@@ -1,12 +1,10 @@
 namespace Sandbox.Core {
-	using Sandbox.Net;
-
 	public static class Client {
 		public static Universe universe = new Universe();
 
 		public static void Start(string ip, string playerName) {
-			Message.RegisterClientHandler<VolumeMessage>(universe.OnReceive);
-			Message.RegisterClientHandler<ChunkMessage>(universe.OnReceive);
+			Net.Client.Listen<VolumeMessage>(universe.Add);
+			Net.Client.Listen<ChunkMessage>(universe.Update);
 			Net.Client.Start(ip, playerName);
 		}
 

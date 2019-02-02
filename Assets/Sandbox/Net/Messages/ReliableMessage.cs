@@ -25,12 +25,12 @@ namespace Sandbox.Net {
 
 		public static void Start() {
 			time = Time.realtimeSinceStartup;
-			Message.RegisterClientHandler<AckMessage>(OnClientReceive);
-			Message.RegisterServerHandler<AckMessage>(OnServerReceive);
+			Client.Listen<AckMessage>(m => clientMessages.Remove(m.sequence));
+			Server.Listen<AckMessage>(m => serverMessages.Remove((m.connection, m.sequence)));
 		}
 
 		///<summary>Resend stale unacknowledged messages.</summary>
-		public static new void Update() {
+		public static void Update() {
 			time = Time.realtimeSinceStartup;
 
 			var clientSequences = clientMessages.Keys.ToList();
@@ -58,14 +58,6 @@ namespace Sandbox.Net {
 					message.Resend(client.connection);
 				}
 			}
-		}
-
-		static void OnClientReceive(AckMessage message) {
-			clientMessages.Remove(message.sequence);
-		}
-
-		static void OnServerReceive(AckMessage message) {
-			serverMessages.Remove((message.connection, message.sequence));
 		}
 
 		///<summary>Send from client to server.</summary>
@@ -123,7 +115,6 @@ namespace Sandbox.Net {
 					incomingSequences[connection] = expectedSequence = 0;
 				}
 				if (sequence > expectedSequence) {
-					//Debug.Log($"Out of sequence: was {sequence}, expected {expectedSequence}");
 					message.Read(reader);
 					waitingOnServer[(connection, sequence)] = this;
 					return;
@@ -136,7 +127,7 @@ namespace Sandbox.Net {
 				++incomingSequences[connection];
 				while (waitingOnServer.TryGetValue((connection, incomingSequences[connection]), out var waitingMessage)) {
 					waitingOnServer.Remove((connection, incomingSequences[connection]));
-					serverReceivedMessages.Add(waitingMessage);
+					Server.receivedMessages.Add(waitingMessage);
 					++incomingSequences[connection];
 				}
 			}
@@ -148,7 +139,6 @@ namespace Sandbox.Net {
 				reader.Read(out int sequence);
 				new AckMessage(sequence).Send();
 				if (sequence > incomingSequence) {
-					//Debug.Log($"Out of sequence: was {sequence}, expected {incomingSequence}");
 					message.Read(reader);
 					waitingOnClient[sequence] = this;
 					return;
@@ -160,7 +150,7 @@ namespace Sandbox.Net {
 				++incomingSequence;
 				while (waitingOnClient.TryGetValue(incomingSequence, out var waitingMessage)) {
 					waitingOnClient.Remove(incomingSequence);
-					clientReceivedMessages.Add(waitingMessage);
+					Client.receivedMessages.Add(waitingMessage);
 					++incomingSequence;
 				}
 			}

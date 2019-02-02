@@ -8,7 +8,6 @@ namespace Sandbox.Core {
 		}
 
 		public static void Update() {
-			Message.Update();
 			ReliableMessage.Update();
 		}
 	}

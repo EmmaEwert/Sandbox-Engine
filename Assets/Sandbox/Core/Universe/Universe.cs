@@ -7,7 +7,7 @@ namespace Sandbox.Core {
 		public Dictionary<ushort, Volume> volumes = new Dictionary<ushort, Volume>();
 		static Queue<Chunk> dirtyChunks = new Queue<Chunk>();
 		
-		public void OnReceive(VolumeMessage message) {
+		public void Add(VolumeMessage message) {
 			var volume = volumes[message.id] = new Volume();
 			volume.id = message.id;
 			volume.gameObject = new GameObject("Volume");
@@ -20,7 +20,7 @@ namespace Sandbox.Core {
 			}
 		}
 
-		public void OnReceive(ChunkMessage message) {
+		public void Update(ChunkMessage message) {
 			var volume = volumes[message.volumeID];
 			var pos = message.pos;
 			var chunk = volume.ChunkAt(pos);

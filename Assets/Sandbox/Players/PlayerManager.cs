@@ -10,7 +10,7 @@ namespace Sandbox {
 		public GameObject localPrefab;
 		public GameObject remotePrefab;
 
-		void OnReceive(JoinMessage message) {
+		void InstantiatePlayer(JoinMessage message) {
 			if (message.local) {
 				localPlayer = Instantiate(localPrefab);
 			} else {
@@ -18,11 +18,7 @@ namespace Sandbox {
 			}
 		}
 
-		void OnServerReceive(TransformMessage message) {
-			message.Broadcast();
-		}
-		
-		void OnClientReceive(TransformMessage message) {
+		void SyncTransform(TransformMessage message) {
 			if (!message.local) {
 				var player = players[message.id].transform;
 				player.position = message.position;
@@ -31,9 +27,9 @@ namespace Sandbox {
 		}
 
 		void Awake() {
-			Message.RegisterClientHandler<JoinMessage>(OnReceive);
-			Message.RegisterClientHandler<TransformMessage>(OnClientReceive);
-			Message.RegisterServerHandler<TransformMessage>(OnServerReceive);
+			Client.Listen<JoinMessage>(InstantiatePlayer);
+			Client.Listen<TransformMessage>(SyncTransform);
+			Server.Listen<TransformMessage>(message => message.Broadcast());
 		}
 	}
 }

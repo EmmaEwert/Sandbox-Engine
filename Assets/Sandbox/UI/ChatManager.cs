@@ -19,22 +19,18 @@ namespace Sandbox {
 			new ChatMessage(text).Send();
 		}
 
-		void OnServerReceive(ChatMessage message) {
-			message.Broadcast();
-		}
-
-		void OnClientReceive(ChatMessage message) {
+		void Print(ChatMessage message) {
 			Add($"{message.name}: {message.text}");
 		}
 
-		void OnReceive(JoinMessage message) {
+		void Print(JoinMessage message) {
 			Add($"{message.name} connected with ID {message.id}");
 		}
 
 		void Start() {
-			Message.RegisterServerHandler<ChatMessage>(OnServerReceive);
-			Message.RegisterClientHandler<ChatMessage>(OnClientReceive);
-			Message.RegisterClientHandler<JoinMessage>(OnReceive);
+			Server.Listen<ChatMessage>(message => message.Broadcast());
+			Client.Listen<ChatMessage>(Print);
+			Client.Listen<JoinMessage>(Print);
 			chat = GetComponent<Text>();
 			Add("Hi~");
 		}

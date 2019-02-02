@@ -12,7 +12,7 @@ namespace Sandbox {
 		public string ip { get; set; } = "82.180.25.150";
 		public bool server { get; set; } = false;
 
-		void OnReceive(ButtonMessage message) {
+		void RemoveBlock(ButtonMessage message) {
 			if (message.button == 0) {
 				var volume = Core.Server.universe.volumes[0];
 				var chunk = volume.ChunkAt(message.blockPosition);
@@ -20,7 +20,7 @@ namespace Sandbox {
 			}
 		}
 
-		void OnReceive(PlaceBlockMessage message) {
+		void ReplaceBlock(PlaceBlockMessage message) {
 			if (math.any(message.blockPosition < 0) || math.any(message.blockPosition >= Volume.ChunkDistance * Chunk.Size)) { return; }
 			var volume = Core.Server.universe.volumes[0];
 			volume[message.blockPosition] = message.id;
@@ -29,8 +29,8 @@ namespace Sandbox {
 		void Start() {
 			Core.Common.Start();
 			if (server) {
-				Message.RegisterServerHandler<PlaceBlockMessage>(OnReceive);
-				Message.RegisterServerHandler<ButtonMessage>(OnReceive);
+				Net.Server.Listen<PlaceBlockMessage>(ReplaceBlock);
+				Net.Server.Listen<ButtonMessage>(RemoveBlock);
 				Core.Server.universe.Generate();
 				Core.Server.Start(playerName);
 			} else {

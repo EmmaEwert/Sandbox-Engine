@@ -7,7 +7,7 @@ namespace Sandbox.Core {
 		public static bool running = false;
 
 		public static void Start(string playerName) {
-			Message.RegisterServerHandler<ConnectClientMessage>(OnReceive);
+			Net.Server.Listen<ConnectClientMessage>(SendVolumes);
 			Net.Server.Start(playerName);
 			running = true;
 			Client.Start(Net.Server.localIP.ToString(), playerName);
@@ -32,7 +32,7 @@ namespace Sandbox.Core {
 			}
 		}
 
-		static void OnReceive(ConnectClientMessage message) {
+		static void SendVolumes(ConnectClientMessage message) {
 			foreach (var volume in universe.volumes) {
 				new VolumeMessage(volume.Key).Send(message.connection);
 				foreach (var chunk in volume.Value.chunks) {
