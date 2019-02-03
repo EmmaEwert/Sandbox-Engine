@@ -14,9 +14,9 @@ namespace Sandbox.Core {
 			for (var z = (int)volumeBox.min.z; z <= volumeBox.max.z; ++z)
 			for (var y = (int)volumeBox.min.y; y <= volumeBox.max.y; ++y)
 			for (var x = (int)volumeBox.min.x; x <= volumeBox.max.x; ++x) {
-				var stateID = volume[int3(x, y, z)];
-				if (stateID == 0) { continue; }
-				var blockBox = BlockState.blockStates[stateID].block.Box(volume, int3(x, y, z));
+				var state = volume[int3(x, y, z)];
+				if (state == 0) { continue; }
+				var blockBox = Block.Find(state).Box(volume, int3(x, y, z));
 				if (Intersects(box, blockBox)) {
 					return true;
 				}
@@ -40,12 +40,12 @@ namespace Sandbox.Core {
 				var difference = ray.origin - (float3(x, y, z) + 0.5f);
 				var distanceSqr = dot(difference, difference);
 				if (distanceSqr >= shortestDistanceSqr) { continue; }
-				var stateID = volume[int3(x, y, z)];
-				if (stateID != 0) {
-					var box = BlockState.blockStates[stateID].block.Box(volume, int3(x, y, z));
+				var state = volume[int3(x, y, z)];
+				if (state != 0) {
+					var box = Block.Find(state).Box(volume, int3(x, y, z));
 					if (Intersects(ray, box, out var point, maxDistance)) {
 						shortestDistanceSqr = distanceSqr;
-						hit.id = stateID;
+						hit.id = state;
 						hit.position = int3(x, y, z);
 						hit.normal = int3((point - hit.position - 0.5f) * 2f); // TODO
 					}

@@ -17,7 +17,6 @@ namespace Sandbox.Core {
 		public static void Update() {
 			Net.Server.Update();
 			Client.Update();
-			universe.Update();
 		}
 
 		public static void Stop() {
@@ -36,7 +35,7 @@ namespace Sandbox.Core {
 			foreach (var volume in universe.volumes) {
 				new VolumeMessage(volume.Key).Send(message.connection);
 				foreach (var chunk in volume.Value.chunks) {
-					new ChunkMessage(volume.Key, chunk).Send(message.connection);
+					new ChunkMessage(volume.Key, chunk, complete: true).Send(message.connection);
 				}
 			}
 		}

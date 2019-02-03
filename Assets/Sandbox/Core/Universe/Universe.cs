@@ -8,7 +8,7 @@ namespace Sandbox.Core {
 		static Queue<Chunk> dirtyChunks = new Queue<Chunk>();
 		
 		public void Add(VolumeMessage message) {
-			var volume = volumes[message.id] = new Volume();
+			var volume = volumes[message.id] = new Volume(server: false);
 			volume.id = message.id;
 			volume.gameObject = new GameObject("Volume");
 			volume.gameObject.transform.position = Vector3.one * -Volume.ChunkDistance * Chunk.Size / 2;
@@ -25,17 +25,20 @@ namespace Sandbox.Core {
 			var pos = message.pos;
 			var chunk = volume.ChunkAt(pos);
 			chunk.IDs(message.ids);
-			chunk.UpdateGeometry(volume);
 		}
 
 		public void Update() {
 			foreach (var volume in volumes.Values) {
-				volume.Update();
+				if (volume.server) {
+					volume.ServerUpdate();
+				} else {
+					volume.ClientUpdate();
+				}
 			}
 		}
 
 		internal void Generate() {
-			volumes[0] = new Volume();
+			volumes[0] = new Volume(server: true);
 			volumes[0].Generate();
 			volumes[0].id = 0;
 			return;

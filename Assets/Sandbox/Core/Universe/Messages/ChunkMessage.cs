@@ -13,11 +13,16 @@ namespace Sandbox.Core {
 			+ sizeof(ushort) * ids.Length;
 
 		public ChunkMessage() { }
-		public ChunkMessage(ushort volumeID, Chunk chunk) {
+		public ChunkMessage(ushort volumeID, Chunk chunk, bool complete = false) {
 			this.volumeID = volumeID;
 			this.pos = chunk.pos;
-			this.ids = chunk.ids;
-			//Buffer.BlockCopy(chunk.ids, 0, blocks, 0, blocks.Length * sizeof(ushort));
+			for (var i = 0; i < chunk.states.Length; ++i) {
+				if (complete || (chunk.flags[i] & Chunk.Flag.Dirty) != 0) {
+					this.ids[i] = chunk.states[i];
+				} else {
+					this.ids[i] = 0xffff;
+				}
+			}
 		}
 
 		public void Read(Reader reader) {

@@ -16,10 +16,10 @@ namespace Sandbox.Core {
 		public int3 pos;
 		public GameObject gameObject;
 		public bool dirty;
-		public ushort[] ids { get; private set; } = new ushort[Size * Size * Size];
-		ushort[] nextIDs = new ushort[Size * Size * Size];
-		NativeArray<ushort> generatedIDs;
-		Flag[] flags = new Flag[Size * Size * Size];
+		public BlockState[] states { get; private set; } = new BlockState[Size * Size * Size];
+		BlockState[] nextStates = new BlockState[Size * Size * Size];
+		NativeArray<BlockState> generatedIDs;
+		public Flag[] flags = new Flag[Size * Size * Size];
 		Volume volume;
 		Dictionary<int3, Entity> entities = new Dictionary<int3, Entity>();
 
@@ -29,25 +29,26 @@ namespace Sandbox.Core {
 		}
 
 		///<summary>Get or set blockstate ID at position. Flags for update if needed.</summary>
-		public ushort this[int3 pos] {
+		public BlockState this[int3 pos] {
 			get {
 				var index = dot(PosToBlockIndex, pos);
-				var id = ids[index];
-				return id != 0 ? id : nextIDs[index];
+				var state = states[index];
+				return state != 0 ? state : nextStates[index];
 			}
 			set {
 				var index = dot(PosToBlockIndex, pos);
-				if (ids[index] == value) { return; }
-				nextIDs[index] = value;
+				if (states[index] == value) { return; }
+				nextStates[index] = value;
 				flags[dot(PosToBlockIndex, pos)] |= Flag.Updated;
 				dirty = true;
-				if (BlockManager.Block(value) != BlockManager.Block(ids[index])) {
+				volume.dirty = true;
+				if (volume.server && value.block != states[index].block) {
 					var manager = World.Active.GetOrCreateManager<EntityManager>();
 					if (entities.TryGetValue(pos, out var entity)) {
 						manager.DestroyEntity(entity);
 						entities.Remove(pos);
 					}
-					entity = BlockManager.Block(value)?.CreateEntity(volume, pos + this.pos) ?? Entity.Null;
+					entity = value.block?.CreateEntity(volume, pos + this.pos) ?? Entity.Null;
 					if (entity != Entity.Null) {
 						entities[pos] = entity;
 					}
@@ -57,8 +58,13 @@ namespace Sandbox.Core {
 
 		///<summary>Copy new IDs to current array, flag neighbors of updated blocks for updates.</summary>
 		public void PreUpdate(Volume volume) {
-			Buffer.BlockCopy(nextIDs, 0, ids, 0, ids.Length * sizeof(ushort));
-			for (var i = 0; i < ids.Length; ++i) {
+			for (var i = 0; i < nextStates.Length; ++i) {
+				if (states[i] != nextStates[i]) {
+					states[i] = nextStates[i];
+					flags[i] |= Flag.Dirty;
+				}
+			}
+			for (var i = 0; i < states.Length; ++i) {
 				if ((flags[i] & Flag.Updated) == 0) { continue; }
 				var pos = this.pos + i / PosToBlockIndex % Size;
 				volume.Set(pos + int3(-1,  0,  0), Flag.NeighborChanged);
@@ -73,15 +79,35 @@ namespace Sandbox.Core {
 		///<summary>Update all non-empty blocks that changed or had their neighbors change.</summary>
 		public void Update(Volume volume) {
 			dirty = false;
-			for (var i = 0; i < ids.Length; ++i) {
-				if (ids[i] != 0 && (flags[i] & (Flag.Updated | Flag.NeighborChanged)) != 0) {
+			for (var i = 0; i < states.Length; ++i) {
+				if (states[i] != 0 && (flags[i] & (Flag.Updated | Flag.NeighborChanged)) != 0) {
 					flags[i] &= ~(Flag.Updated | Flag.NeighborChanged);
 					var pos = this.pos + i / PosToBlockIndex % Size;
-					BlockManager.Block(ids[i]).OnUpdated(volume, pos);
+					if (volume.server) {
+						states[i].block.OnUpdated(volume, pos);
+					}
 				} else {
 					flags[i] &= ~(Flag.Updated | Flag.NeighborChanged);
 				}
 			}
+		}
+
+		public void Clean() {
+			for (var i = 0; i < states.Length; ++i) {
+				flags[i] &= ~Flag.Dirty;
+			}
+		}
+
+		public void ClientUpdate(Volume volume) {
+			dirty = false;
+			for (var i = 0; i < states.Length; ++i) {
+				if ((flags[i] & Flag.Updated) != 0) {
+					var pos = this.pos + i / PosToBlockIndex % Size;
+					new PlaceBlockMessage(pos, states[i]).Send();
+				}
+			}
+			//Update(volume);
+			UpdateGeometry(volume);
 		}
 
 		public void Set(int3 pos, Flag flag) {
@@ -90,23 +116,33 @@ namespace Sandbox.Core {
 		}
 
 		public void IDs(ushort[] ids) {
-			this.ids = ids;
-			Buffer.BlockCopy(ids, 0, nextIDs, 0, ids.Length * sizeof(ushort));
+			var changed = false;
+			for (var i = 0; i < ids.Length; ++i) {
+				if (ids[i] != 0xffff) {
+					if (this.nextStates[i] != ids[i]) {
+						changed = true;
+						this.states[i] = nextStates[i] = ids[i];
+					}
+				}
+			}
+			if (changed) {
+				UpdateGeometry(volume);
+			}
 		}
 
 		public JobHandle Generate() {
-			generatedIDs = new NativeArray<ushort>(this.ids, Allocator.TempJob);
+			generatedIDs = new NativeArray<BlockState>(this.states, Allocator.TempJob);
 			return new GenerateJob {
 				pos = pos,
-				dirt = BlockManager.Default("dirt").id,
-				stone = BlockManager.Default("stone").id,
+				dirt = Block.Find<Dirt>().defaultState,
+				stone = Block.Find<Stone>().defaultState,
 				ids = generatedIDs,
-			}.Schedule(ids.Length, Size);
+			}.Schedule(states.Length, Size);
 		}
 
 		public void AssignGeneratedIDs() {
-			generatedIDs.CopyTo(ids);
-			generatedIDs.CopyTo(nextIDs);
+			generatedIDs.CopyTo(states);
+			generatedIDs.CopyTo(nextStates);
 			generatedIDs.Dispose();
 		}
 
@@ -118,7 +154,7 @@ namespace Sandbox.Core {
 			for (var x = 0; x < Size; ++x) {
 				var neighbor = this[int3(x, y, z)];
 				opaqueBlocks[x + y * Size + z * Size * Size] =
-					neighbor != 0 && BlockState.blockStates[neighbor].block.opaqueCube;
+					neighbor != 0 && Block.Find(neighbor).opaqueCube;
 			}
 
 			var vertices = new List<Vector3>();
@@ -128,11 +164,10 @@ namespace Sandbox.Core {
 			for (var pos = int3(0); pos.z < Size; ++pos.z)
 			for (pos.y = 0; pos.y < Size; ++pos.y)
 			for (pos.x = 0; pos.x < Size; ++pos.x) {
-				var stateID = this[pos];
-				if (stateID == 0) { continue; }
+				var state = this[pos];
+				if (state == 0) { continue; }
 				var index = dot(PosToBlockIndex, pos);
-				var state = BlockState.blockStates[stateID];
-				var stateModel = state.models[0];
+				var stateModel = Block.Model(state);
 				var faces = stateModel.model.faces;
 				for (var i = 0; i < faces.Length; ++i) {
 					var face = faces[i];
@@ -168,14 +203,15 @@ namespace Sandbox.Core {
 			None            = 0b00000000,
 			Updated         = 0b00000001,
 			NeighborChanged = 0b00000010,
+			Dirty           = 0b00000100, // Indicates they should be sent over the network
 		}
 
 		[BurstCompile]
 		struct GenerateJob : IJobParallelFor {
 			[ReadOnly] public int3 pos;
-			[ReadOnly] public ushort dirt;
-			[ReadOnly] public ushort stone;
-			[WriteOnly] public NativeArray<ushort> ids;
+			[ReadOnly] public BlockState dirt;
+			[ReadOnly] public BlockState stone;
+			[WriteOnly] public NativeArray<BlockState> ids;
 
 			public void Execute(int index) {
 				var x = pos.x + index % Size;

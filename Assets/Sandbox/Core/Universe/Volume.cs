@@ -13,8 +13,11 @@ namespace Sandbox.Core {
 		public Chunk[,,] chunks = new Chunk[ChunkDistance, ChunkDistance, ChunkDistance];
 		public GameObject gameObject;
 		public float3 position;
+		public bool server;
+		public bool dirty;
 
-		public Volume() {
+		public Volume(bool server) {
+			this.server = server;
 			for (var z = 0; z < ChunkDistance; ++z)
 			for (var y = 0; y < ChunkDistance; ++y)
 			for (var x = 0; x < ChunkDistance; ++x) {
@@ -23,16 +26,24 @@ namespace Sandbox.Core {
 			position = new float3(1f) * -Volume.ChunkDistance * Chunk.Size / 2;
 		}
 
-		public ushort this[int3 pos] {
+		public BlockState this[int3 pos] {
 			get => ChunkAt(pos)?[(pos + MaxSize) % Chunk.Size] ?? 0;
 			set {
-				//if (this[pos] == value) { return; }
 				var chunk = ChunkAt(pos);
 				chunk[(pos + MaxSize) % Chunk.Size] = value;
 			}
 		}
 
-		public void Update() {
+		public Property this[int3 pos, string property] {
+			get => Block.Properties(this[pos])[property];
+			set {
+				var properties = Block.Properties(this[pos]);
+				properties[property] = value;
+				this[pos] = Block.FindState(properties);
+			}
+		}
+
+		public void ServerUpdate() {
 			for (var z = 0; z < ChunkDistance; ++z)
 			for (var y = 0; y < ChunkDistance; ++y)
 			for (var x = 0; x < ChunkDistance; ++x) {
@@ -46,8 +57,28 @@ namespace Sandbox.Core {
 				if (chunks[x, y, z].dirty) {
 					chunks[x, y, z].Update(this);
 					new ChunkMessage(id, chunks[x, y, z]).Broadcast();
+					chunks[x, y, z].Clean();
 				}
 			}
+		}
+
+		public void ClientUpdate() {
+			if (!dirty) { return; }
+			for (var z = 0; z < ChunkDistance; ++z)
+			for (var y = 0; y < ChunkDistance; ++y)
+			for (var x = 0; x < ChunkDistance; ++x) {
+				if (chunks[x, y, z].dirty) {
+					chunks[x, y, z].PreUpdate(this);
+				}
+			}
+			for (var z = 0; z < ChunkDistance; ++z)
+			for (var y = 0; y < ChunkDistance; ++y)
+			for (var x = 0; x < ChunkDistance; ++x) {
+				if (chunks[x, y, z].dirty) {
+					chunks[x, y, z].ClientUpdate(this);
+				}
+			}
+			dirty = false;
 		}
 
 		public void Set(int3 pos, Chunk.Flag flag) {

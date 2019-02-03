@@ -15,7 +15,7 @@ namespace Sandbox {
 		void ReplaceBlock(PlaceBlockMessage message) {
 			if (math.any(message.blockPosition < 0) || math.any(message.blockPosition >= Volume.ChunkDistance * Chunk.Size)) { return; }
 			var volume = Core.Server.universe.volumes[0];
-			volume[message.blockPosition] = message.id;
+			volume[message.blockPosition] = message.state;
 		}
 
 		void Start() {

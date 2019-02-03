@@ -3,7 +3,9 @@ namespace Sandbox.Core {
 
 	public class Common {
 		public static void Start() {
-			BlockManager.Start();
+			Block.Initialize();
+			TextureManager.Start();
+			ModelManager.Start();
 			ReliableMessage.Start();
 		}
 

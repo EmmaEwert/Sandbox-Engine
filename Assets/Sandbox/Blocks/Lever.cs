@@ -16,15 +16,12 @@ namespace Sandbox {
 
 		public override void On(Verb verb, Volume volume, int3 pos) {
 			if (verb is Interact) {
-				var state = BlockState.blockStates[volume[pos]];
-				var lever = BlockManager.Load("lever");
-				if (state.properties["powered"]) {
-					new PlaceBlockMessage(pos, lever["face=floor,facing=north,powered=false"].id).Send();
-					new PlaceBlockMessage(pos + new int3(0, -1, 0), BlockManager.Default("cobblestone").id).Send();
+				if (volume[pos, "powered"]) {
+					volume[pos.down()] = Block.Find<Cobblestone>().defaultState;
 				} else {
-					new PlaceBlockMessage(pos, lever["face=floor,facing=north,powered=true"].id).Send();
-					new PlaceBlockMessage(pos + new int3(0, -1, 0), BlockManager.Default("spawner").id).Send();
+					volume[pos.down()] = Block.Find<Spawner>().defaultState;
 				}
+				volume[pos, "powered"] = !volume[pos, "powered"];
 			} else {
 				base.On(verb, volume, pos);
 			}

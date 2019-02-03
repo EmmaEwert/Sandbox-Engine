@@ -12,19 +12,19 @@
 		public Transform lineBox => GameObject.Find("Line Box").transform;
 		float speed = 4f;
 		float3 velocity;
-		ushort blockID;
+		BlockState state;
 
 		void PlaceOrRemoveBlock(Block.Verb verb, Volume volume, int3 pos) {
 			if (verb is Push push) {
-				new PlaceBlockMessage(pos + push.normal, push.blockID).Send();
+				volume[pos + push.normal] = push.state;
 			} else if (verb is Pull) {
-				new PlaceBlockMessage(pos, 0).Send();
+				volume[pos] = 0;
 			}
 		}
 
 		void Awake() {
 			instance = this;
-			blockID = BlockManager.Default("sand").id;
+			state = Block.Find<Sand>().defaultState;
 			Block.onDefault = PlaceOrRemoveBlock;
 		}
 
@@ -43,18 +43,18 @@
 
 			// Block selection
 			if (Input.GetKeyDown(KeyCode.Alpha1)) {
-				blockID = BlockManager.Default("sand").id;
+				state = Block.Find<Sand>().defaultState;
 			} else if (Input.GetKeyDown(KeyCode.Alpha2)) {
-				blockID = BlockManager.Default("cobblestone").id;
+				state = Block.Find<Cobblestone>().defaultState;
 			} else if (Input.GetKeyDown(KeyCode.Alpha3)) {
-				blockID = BlockManager.Default("stone").id;
+				state = Block.Find<Stone>().defaultState;
 			} else if (Input.GetKeyDown(KeyCode.Alpha4)) {
-				blockID = BlockManager.Default("dirt").id;
+				state = Block.Find<Dirt>().defaultState;
 			} else if (Input.GetKeyDown(KeyCode.Alpha5)) {
-				blockID = BlockManager.Default("lever").id;
+				state = Block.Find<Lever>().defaultState;
 			}
 			GameObject.Find("Selected Block").GetComponent<Text>().text =
-				BlockManager.Block(blockID).GetType().Name;
+				state.block.GetType().Name;
 
 			// Aiming
 			var aim = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
@@ -95,15 +95,15 @@
 			// Looking
 			var ray = new Core.Ray(camera.position, camera.forward);
 			if (Core.Physics.Intersects(volume, ray, out var hit, maxDistance: 5)) {
-				var box = BlockManager.Block(volume[hit.position]).Box(volume, hit.position);
+				var box = volume[hit.position].block.Box(volume, hit.position);
 				lineBox.position = float3(volume.gameObject.transform.position) + box.min;
 				lineBox.localScale = box.max - box.min;
-				var block = BlockManager.Block(volume[hit.position]);
+				var block = volume[hit.position].block;
 				if (Input.GetButtonDown("Fire1")) {
 					block.On(new Pull(), volume, hit.position);
 				}
 				if (Input.GetButtonDown("Fire2")) {
-					block.On(new Push { blockID = blockID, normal = new int3(hit.normal) }, volume, hit.position);
+					block.On(new Push { state = state, normal = new int3(hit.normal) }, volume, hit.position);
 				}
 				if (Input.GetKeyDown(KeyCode.E)) {
 					block.On(new Interact(), volume, hit.position);

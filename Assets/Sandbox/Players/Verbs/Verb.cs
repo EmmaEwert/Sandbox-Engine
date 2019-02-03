@@ -5,7 +5,7 @@ namespace Sandbox {
 	public class Interact : Block.Verb { }
 
 	public class Push : Block.Verb {
-		public ushort blockID;
+		public BlockState state;
 		public int3 normal;
 	}
 

@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace Sandbox.Core {
 	public static class Client {
 		public static Universe universe = new Universe();
@@ -9,12 +11,12 @@ namespace Sandbox.Core {
 		}
 
 		public static void Update() {
+			universe.Update();
 			Net.Client.Update();
 		}
 
 		public static void Stop() {
 			Net.Client.Stop();
 		}
-
 	}
 }
